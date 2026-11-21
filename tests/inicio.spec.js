@@ -210,3 +210,36 @@ test('TC-DM-31 carroça vence a soma em quem começa', async () => {
   expect(pecasEm('mesa')).toHaveLength(0);
 });
 
+test('TC-DM-32 abertura obrigatória sem carroça', async () => {
+  // Cenário sem sorteio e sem carroça: J1 tem 5-6 (soma 11, a maior) e 0-1; J2 tem 4-6 e 2-3; monte vazio.
+  // Ninguém tem carroça, então o J1 começa, e a abertura obrigatória é o 5-6 (maior soma).
+  const CENARIO = { j1: '5-6,0-1', j2: '4-6,2-3', monte: '' };
+  const user = await abrirJogo(CENARIO);
+
+  // Passo 1: J1 tenta abrir com 0-1 (não é a abertura obrigatória). A jogada é inválida.
+  await jogar(user, '0-1');
+
+  // a. A mensagem avisa a jogada inválida.
+  expect(screen.getByTestId('mensagem')).toHaveTextContent(/inválida/i);
+  // b. Nada foi para a mesa.
+  expect(pecasEm('mesa')).toHaveLength(0);
+  // c. A mão do J1 continua com 2 peças.
+  expect(screen.getByTestId('qtd-j1')).toHaveTextContent(/^2$/);
+  // d. A vez continua com o J1.
+  expect(screen.getByTestId('vez')).toHaveTextContent(/^Jogador 1$/);
+  // e. A peça 0-1 continua na mão do J1.
+  expect(within(screen.getByTestId('mao-j1')).getByTestId('peca-0-1')).toBeInTheDocument();
+
+  // Passo 2: J1 abre com a abertura obrigatória 5-6.
+  await jogar(user, '5-6');
+
+  // a. A peça 5-6 foi para a mesa.
+  // (Não conferimos o texto/orientação da peça na mesa: a spec não define se aparece 5-6 ou 6-5.)
+  expect(within(screen.getByTestId('mesa')).getByTestId('peca-5-6')).toBeInTheDocument();
+  // b. A mesa tem só essa peça.
+  expect(pecasEm('mesa')).toHaveLength(1);
+  // c. A mão do J1 ficou com 1 peça.
+  expect(screen.getByTestId('qtd-j1')).toHaveTextContent(/^1$/);
+  // d. A vez passou para o J2.
+  expect(screen.getByTestId('vez')).toHaveTextContent(/^Jogador 2$/);
+});
