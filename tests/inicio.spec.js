@@ -1,6 +1,6 @@
 // Tarefa A2 (Henrique): distribuição e mãos. Só pela interface (seção 3 do PLANEJAMENTO.md):
 // abrirJogo, data-testid e user-event. Sem jest.mock e sem importar js/*.js.
-import { abrirJogo, screen, pecasEm, MAOS_PADRAO, J1_PADRAO } from './helpers.js';
+import { abrirJogo, screen, pecasEm, jogar, mesaComoTexto, MAOS_PADRAO, J1_PADRAO } from './helpers.js';
 
 test('TC-DM-01 distribuição sorteada', async () => {
   // Sem parâmetros: a distribuição é sorteada, então só conferimos regras que valem para qualquer mão.
@@ -74,4 +74,27 @@ test('TC-DM-02 mãos com os parâmetros', async () => {
   expect(screen.getByTestId('qtd-j1')).toHaveTextContent(/^7$/);
   expect(screen.getByTestId('qtd-j2')).toHaveTextContent(/^7$/);
   expect(pecasEm('mesa')).toHaveLength(0);
+});
+
+test('TC-DM-12 contadores durante a partida', async () => {
+  // MAOS_PADRAO: o J1 tem 6-6 e começa. Mesa: 6-6 -> 6-1 -> 1-3 (cada encaixe usa a ponta da direita).
+  const user = await abrirJogo(MAOS_PADRAO);
+
+  // J1 abre com 6-6 (mesa vazia: basta clicar na peça). Sobram 6 peças na mão dele.
+  await jogar(user, '6-6');
+
+  // J2 encaixa 1-6 na ponta direita (6): a peça gira para 6-1 e a ponta direita vira 1.
+  await jogar(user, '1-6', 'direita');
+
+  // J1 encaixa 1-3 na ponta direita (1): a mesa passa a ter 3 peças.
+  await jogar(user, '1-3', 'direita');
+
+  // Contadores: J1 com 5 (7 - 2 jogadas), J2 com 6 (7 - 1), monte intacto com 14.
+  expect(screen.getByTestId('qtd-j1')).toHaveTextContent(/^5$/);
+  expect(screen.getByTestId('qtd-j2')).toHaveTextContent(/^6$/);
+  expect(screen.getByTestId('qtd-monte')).toHaveTextContent(/^14$/);
+
+  // Mesa com 3 peças, na ordem da esquerda para a direita.
+  expect(pecasEm('mesa')).toHaveLength(3);
+  expect(mesaComoTexto()).toBe('6-6 6-1 1-3');
 });
