@@ -1,5 +1,5 @@
 // Tarefas A4 e A5 (Henrique): jogadas na mesa. Só pela interface (seção 3 do PLANEJAMENTO.md).
-import { abrirJogo, jogar, mesaComoTexto, pecasEm, screen, within, MAOS_PADRAO, J2_PADRAO } from './helpers.js';
+import { abrirJogo, jogar, mesaComoTexto, pecasEm, screen, within, MAOS_PADRAO, J1_PADRAO, J2_PADRAO } from './helpers.js';
 
 test('TC-DM-06 primeira jogada', async () => {
   // MAOS_PADRAO: o J1 tem a carroça 6-6 e começa. Abertura: basta clicar na peça (sem ponta).
@@ -96,4 +96,37 @@ test('TC-DM-33 peça gira na ponta esquerda', async () => {
   // A vez passou para o J2, e o J1 ficou com 5 peças (7 - 2 jogadas).
   expect(screen.getByTestId('vez')).toHaveTextContent(/^Jogador 2$/);
   expect(screen.getByTestId('qtd-j1')).toHaveTextContent(/^5$/);
+});
+
+test('TC-DM-34 mão visível troca nos dois sentidos', async () => {
+  // MAOS_PADRAO: J1 abre com 6-6; J2 encaixa 1-6 na ponta direita. Depois da jogada a vez volta para o J1.
+  // O TC-DM-06 confere a troca J1 -> J2; este confere a volta J2 -> J1.
+  const user = await abrirJogo(MAOS_PADRAO);
+  await jogar(user, '6-6');
+  await jogar(user, '1-6', 'direita');
+
+  // Vez do J1: a mão dele fica visível.
+  expect(screen.getByTestId('vez')).toHaveTextContent(/^Jogador 1$/);
+
+  // Mão do J1 visível: as 6 peças restantes de J1_PADRAO (sem a 6-6), com os números, nenhuma escondida.
+  const maoJ1 = pecasEm('mao-j1');
+  expect(maoJ1).toHaveLength(6);
+  expect(maoJ1.map((p) => p.textContent.trim()).sort()).toEqual(
+    J1_PADRAO.split(',').filter((ab) => ab !== '6-6').sort(),
+  );
+  for (const p of maoJ1) {
+    expect(p).not.toHaveAttribute('data-oculta', 'true');
+  }
+
+  // Mão do J2 escondida: 6 peças viradas, sem os números.
+  const maoJ2 = pecasEm('mao-j2');
+  expect(maoJ2).toHaveLength(6);
+  for (const p of maoJ2) {
+    expect(p).toHaveAttribute('data-oculta', 'true');
+    expect(p.textContent.trim()).toBe('');
+  }
+
+  // Contadores: 6 peças em cada mão.
+  expect(screen.getByTestId('qtd-j1')).toHaveTextContent(/^6$/);
+  expect(screen.getByTestId('qtd-j2')).toHaveTextContent(/^6$/);
 });
