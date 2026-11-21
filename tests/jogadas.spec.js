@@ -51,3 +51,22 @@ test('TC-DM-07 encaixar na direita', async () => {
   // A peça 1-6 está na mesa, mostrada já girada.
   expect(within(screen.getByTestId('mesa')).getByTestId('peca-1-6')).toHaveTextContent(/^6-1$/);
 });
+
+test('TC-DM-08 encaixar na esquerda', async () => {
+  // MAOS_PADRAO: J1 abre com 6-6; J2 encaixa 2-6 na ponta esquerda (o 6 da ponta).
+  const user = await abrirJogo(MAOS_PADRAO);
+  await jogar(user, '6-6');
+  await jogar(user, '2-6', 'esquerda');
+
+  // A peça 2-6 vai para a esquerda, com o 6 encostado no 6-6 e o 2 na ponta esquerda.
+  expect(mesaComoTexto()).toBe('2-6 6-6');
+  expect(screen.getByTestId('ponta-esquerda')).toHaveTextContent(/^2$/);
+  expect(screen.getByTestId('ponta-direita')).toHaveTextContent(/^6$/);
+
+  // J2 ficou com 6 peças e a vez voltou para o J1.
+  expect(screen.getByTestId('qtd-j2')).toHaveTextContent(/^6$/);
+  expect(screen.getByTestId('vez')).toHaveTextContent(/^Jogador 1$/);
+
+  // A peça 2-6 está na mesa, mostrada como 2-6.
+  expect(within(screen.getByTestId('mesa')).getByTestId('peca-2-6')).toHaveTextContent(/^2-6$/);
+});
