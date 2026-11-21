@@ -98,3 +98,31 @@ test('TC-DM-12 contadores durante a partida', async () => {
   expect(pecasEm('mesa')).toHaveLength(3);
   expect(mesaComoTexto()).toBe('6-6 6-1 1-3');
 });
+
+test('TC-DM-03 começa a maior carroça', async () => {
+  // Cenário sem sorteio: J1 tem 3-3 (carroça) e 1-2; J2 tem 5-5 (a maior carroça) e 0-0; monte vazio.
+  // Quem tem a maior carroça começa: é o J2 (5-5 > 3-3), mesmo ele tendo também 0-0.
+  const CENARIO = { j1: '3-3,1-2', j2: '5-5,0-0', monte: '' };
+  await abrirJogo(CENARIO);
+
+  expect(screen.getByTestId('vez')).toHaveTextContent(/^Jogador 2$/);
+
+  // Mão do J2 (na vez dele, visível): 2 peças com os números.
+  const maoJ2 = pecasEm('mao-j2');
+  expect(maoJ2).toHaveLength(2);
+  expect(maoJ2.map((p) => p.textContent.trim()).sort()).toEqual(['0-0', '5-5']);
+  for (const p of maoJ2) {
+    expect(p).not.toHaveAttribute('data-oculta', 'true');
+  }
+
+  // Mão do J1 (fora da vez): 2 peças viradas, sem os números.
+  const maoJ1 = pecasEm('mao-j1');
+  expect(maoJ1).toHaveLength(2);
+  for (const p of maoJ1) {
+    expect(p).toHaveAttribute('data-oculta', 'true');
+    expect(p.textContent.trim()).toBe('');
+  }
+
+  // Nada jogado ainda.
+  expect(pecasEm('mesa')).toHaveLength(0);
+});
