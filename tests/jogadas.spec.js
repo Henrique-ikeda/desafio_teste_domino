@@ -154,3 +154,35 @@ test('TC-DM-09 peça que não encaixa', async () => {
   expect(screen.getByTestId('ponta-esquerda')).toHaveTextContent(/^6$/);
   expect(screen.getByTestId('ponta-direita')).toHaveTextContent(/^6$/);
 });
+
+test('TC-DM-10 ponta errada, depois a certa', async () => {
+  // MAOS_PADRAO: J1 abre com 6-6; J2 encaixa 1-6 na direita (pontas: 6 à esquerda, 1 à direita).
+  // J1 tenta 1-3 na esquerda (ponta 6): inválida. Depois tenta 1-3 na direita (ponta 1): válida.
+  const user = await abrirJogo(MAOS_PADRAO);
+  await jogar(user, '6-6');
+  await jogar(user, '1-6', 'direita');
+  await jogar(user, '1-3', 'esquerda');
+
+  // Positivo primeiro: a mensagem avisa que a jogada é inválida.
+  expect(screen.getByTestId('mensagem')).toHaveTextContent(/inválida/i);
+
+  // A peça 1-3 continua na mão do J1 (é a vez dele, então a mão está visível).
+  expect(within(screen.getByTestId('mao-j1')).getByTestId('peca-1-3')).toBeInTheDocument();
+
+  // Nada mudou na mesa, na vez nem no contador do J1.
+  expect(mesaComoTexto()).toBe('6-6 6-1');
+  expect(screen.getByTestId('vez')).toHaveTextContent(/^Jogador 1$/);
+  expect(screen.getByTestId('qtd-j1')).toHaveTextContent(/^6$/);
+
+  // Segunda tentativa, clique novo: 1-3 na ponta direita (1). A peça entra na mesa.
+  await jogar(user, '1-3', 'direita');
+
+  // Mesa com a peça nova, a ponta direita agora é 3 e a esquerda continua 6.
+  expect(mesaComoTexto()).toBe('6-6 6-1 1-3');
+  expect(screen.getByTestId('ponta-esquerda')).toHaveTextContent(/^6$/);
+  expect(screen.getByTestId('ponta-direita')).toHaveTextContent(/^3$/);
+
+  // A vez passou para o J2 e o J1 ficou com 5 peças.
+  expect(screen.getByTestId('vez')).toHaveTextContent(/^Jogador 2$/);
+  expect(screen.getByTestId('qtd-j1')).toHaveTextContent(/^5$/);
+});
