@@ -46,7 +46,7 @@ npx jest tests/<arquivo>.spec.js -t "TC-DM-NN"   # um caso só
 - **Metodologia:** TDD, um caso de teste por vez: escrever, rodar, ver falhar pelo motivo certo e fazer o commit `test:`. Uso de IA documentado em [docs/TDD-COM-IA.md](docs/TDD-COM-IA.md).
 - **Integração contínua:** o GitHub Actions roda `npm ci` e `npm run verificar` em todo push e Pull Request.
 
-## Casos de teste (24)
+## Casos de teste (26)
 
 | ID | Cenário | Arquivo | Resultado esperado | Autor |
 |---|---|---|---|---|
@@ -74,6 +74,8 @@ npx jest tests/<arquivo>.spec.js -t "TC-DM-NN"   # um caso só
 | TC-DM-22 | Nova partida | `tests/fim-de-jogo.spec.js` | `mesa` sem peças; `qtd-j1` = 7, `qtd-j2` = 7, `qtd-monte` = 14; `vez` = "Jogador 1"; `mao-j1` com as peças de `J1_PADRAO`; `mensagem` vazia | Felipe |
 | TC-DM-23 | Compra vai para a mão certa e fica visível | `tests/compra.spec.js` | `peca-0-1` dentro de `mao-j2`, com o texto "0-1" (mão visível, é a vez dele); `qtd-j2` = 3; `peca-0-1` não está em `mao-j1` | Felipe |
 | TC-DM-24 | Monte acaba durante a compra | `tests/compra.spec.js` | `qtd-monte` = 0; `btn-comprar` desabilitado; `btn-passar` habilitado; o jogo **não** trancou (o J1 ainda pode jogar 3-6): `mensagem` vazia | Felipe |
+| TC-DM-31 | Carroça vence a soma em quem começa | `tests/inicio.spec.js` | `vez` = "Jogador 2" (1-1 é a única carroça, mesmo somando menos que 5-6); `mao-j2` mostra as peças e `mao-j1` fica escondida | Henrique |
+| TC-DM-32 | Abertura obrigatória sem carroça | `tests/inicio.spec.js` | Depois do 0-1: `mesa` vazia, `mensagem` contém "inválida", `qtd-j1` = 2, `vez` = "Jogador 1". Depois do 5-6: `peca-5-6` dentro da `mesa`, `qtd-j1` = 1, `vez` = "Jogador 2" | Henrique |
 
 ## Estrutura
 

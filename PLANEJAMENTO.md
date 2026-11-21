@@ -171,7 +171,7 @@ Cada integrante é **dono de arquivos de teste diferentes** (coluna "Arquivos").
 |---|---|---|---|
 | **A1** Setup: `package.json`, `babel.config.cjs`, `js/main.js` vazio, `.gitignore`, `index.html` esqueleto, `tests/helpers.js`, verificador, skill, sub-agentes e hooks, PLANEJAMENTO e docs | `main` (repositório vazio, commit direto) | tudo | — |
 | **A2** Distribuição e mãos | `henrique/a2-distribuicao` | tests/inicio.spec.js | 01, 02, 12 |
-| **A3** Quem começa | `henrique/a3-quem-comeca` | tests/inicio.spec.js | 03, 04, 05 |
+| **A3** Quem começa | `henrique/a3-quem-comeca` | tests/inicio.spec.js | 03, 04, 05, 31, 32 |
 | **A4** Jogar nas pontas | `henrique/a4-jogar` | tests/jogadas.spec.js | 06, 07, 08 |
 | **A5** Jogadas inválidas | `henrique/a5-invalidas` | tests/jogadas.spec.js | 09, 10, 11 |
 
@@ -184,6 +184,10 @@ Cada integrante é **dono de arquivos de teste diferentes** (coluna "Arquivos").
 | **F3** Passar a vez | `felipe/f3-passar` | tests/compra.spec.js | 15, 16, 24 |
 | **F4** Bater e jogo trancado | `felipe/f4-fim` | tests/fim-de-jogo.spec.js | 17, 18, 19, 20 |
 | **F5** Fim bloqueia e nova partida | `felipe/f5-nova-partida` | tests/fim-de-jogo.spec.js | 21, 22 |
+
+### IDs para casos de teste adicionais
+
+Para os dois não criarem o mesmo ID: **TC-DM-25 a TC-DM-30** ficam reservados para o Felipe e os casos adicionais do Henrique começam em **TC-DM-31**. Todo TC novo entra na seção 5, na [matriz](docs/MATRIZ-COBERTURA.md) e na tabela do README, no mesmo PR do teste.
 
 ## 5. Casos de teste (interface)
 
@@ -205,6 +209,8 @@ Cada integrante é **dono de arquivos de teste diferentes** (coluna "Arquivos").
 | TC-DM-10 | Ponta errada, depois a certa | `MAOS_PADRAO`. J1 joga 6-6; J2 joga 1-6 na direita; J1 tenta 1-3 na esquerda (6); depois 1-3 na direita (1) | Na esquerda: inválida, `mesa` = "6-6 6-1". Na direita: `mesa` = "6-6 6-1 1-3"; `ponta-direita` = 3 |
 | TC-DM-11 | Mão escondida não joga | `MAOS_PADRAO`. Na vez do J1, clicar `peca-1-6` (mão do J2) e depois `ponta-direita` | `peca-1-6` continua em `mao-j2` com `data-oculta` = `true`; `mesa` vazia; `vez` = "Jogador 1" |
 | TC-DM-12 | Contadores durante a partida | `MAOS_PADRAO`. J1 joga 6-6; J2 joga 1-6 na direita; J1 joga 1-3 na direita | `qtd-j1` = 5; `qtd-j2` = 6; `qtd-monte` = 14; `mesa` com 3 peças |
+| TC-DM-31 | Carroça vence a soma em quem começa | `?j1=5-6,0-2&j2=1-1,0-3&monte=` | `vez` = "Jogador 2" (1-1 é a única carroça, mesmo somando menos que 5-6); `mao-j2` mostra as peças e `mao-j1` fica escondida |
+| TC-DM-32 | Abertura obrigatória sem carroça | `?j1=5-6,0-1&j2=4-6,2-3&monte=`. Jogador 1 clica `peca-0-1`; depois clica `peca-5-6` | Depois do 0-1: `mesa` vazia, `mensagem` contém "inválida", `qtd-j1` = 2, `vez` = "Jogador 1". Depois do 5-6: `peca-5-6` dentro da `mesa`, `qtd-j1` = 1, `vez` = "Jogador 2" |
 
 ### Felipe — comprar, passar e fim de jogo
 
