@@ -126,3 +126,31 @@ test('TC-DM-03 começa a maior carroça', async () => {
   // Nada jogado ainda.
   expect(pecasEm('mesa')).toHaveLength(0);
 });
+
+test('TC-DM-04 sem carroça, começa a maior soma', async () => {
+  // Cenário sem sorteio e sem carroça: J1 tem 5-6 (soma 11, a maior) e 0-1; J2 tem 4-6 (soma 10) e 2-3; monte vazio.
+  // Ninguém tem carroça, então começa quem tem a peça de maior soma: o J1 (5-6).
+  const CENARIO = { j1: '5-6,0-1', j2: '4-6,2-3', monte: '' };
+  await abrirJogo(CENARIO);
+
+  expect(screen.getByTestId('vez')).toHaveTextContent(/^Jogador 1$/);
+
+  // Mão do J1 (na vez dele, visível): 2 peças com os números.
+  const maoJ1 = pecasEm('mao-j1');
+  expect(maoJ1).toHaveLength(2);
+  expect(maoJ1.map((p) => p.textContent.trim()).sort()).toEqual(['0-1', '5-6']);
+  for (const p of maoJ1) {
+    expect(p).not.toHaveAttribute('data-oculta', 'true');
+  }
+
+  // Mão do J2 (fora da vez): 2 peças viradas, sem os números.
+  const maoJ2 = pecasEm('mao-j2');
+  expect(maoJ2).toHaveLength(2);
+  for (const p of maoJ2) {
+    expect(p).toHaveAttribute('data-oculta', 'true');
+    expect(p.textContent.trim()).toBe('');
+  }
+
+  // Nada jogado ainda.
+  expect(pecasEm('mesa')).toHaveLength(0);
+});
