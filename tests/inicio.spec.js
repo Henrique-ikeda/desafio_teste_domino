@@ -37,6 +37,16 @@ test('TC-DM-01 distribuição sorteada', async () => {
     expect(p.textContent.trim()).toBe('');
   }
 
+  // As 14 peças distribuídas (as duas mãos) são peças válidas e todas diferentes: o data-testid
+  // peca-A-B (A ≤ B) existe também na mão escondida (seção 3), mesmo sem os números na tela.
+  const idsDistribuidos = [...pecasVisiveis, ...pecasOcultas].map((p) => p.getAttribute('data-testid'));
+  for (const id of idsDistribuidos) {
+    const m = id.match(/^peca-([0-6])-([0-6])$/);
+    expect(m).not.toBeNull();
+    expect(Number(m[1])).toBeLessThanOrEqual(Number(m[2]));
+  }
+  expect(new Set(idsDistribuidos).size).toBe(14);
+
   // Mesa vazia no início, sem pontas.
   expect(pecasEm('mesa')).toHaveLength(0);
   expect(screen.getByTestId('ponta-esquerda').textContent.trim()).toBe('');
