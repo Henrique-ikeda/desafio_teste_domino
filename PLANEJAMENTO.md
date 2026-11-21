@@ -172,7 +172,7 @@ Cada integrante é **dono de arquivos de teste diferentes** (coluna "Arquivos").
 | **A1** Setup: `package.json`, `babel.config.cjs`, `js/main.js` vazio, `.gitignore`, `index.html` esqueleto, `tests/helpers.js`, verificador, skill, sub-agentes e hooks, PLANEJAMENTO e docs | `main` (repositório vazio, commit direto) | tudo | — |
 | **A2** Distribuição e mãos | `henrique/a2-distribuicao` | tests/inicio.spec.js | 01, 02, 12 |
 | **A3** Quem começa | `henrique/a3-quem-comeca` | tests/inicio.spec.js | 03, 04, 05, 31, 32 |
-| **A4** Jogar nas pontas | `henrique/a4-jogar` | tests/jogadas.spec.js | 06, 07, 08 |
+| **A4** Jogar nas pontas | `henrique/a4-jogar` | tests/jogadas.spec.js | 06, 07, 08, 33, 34 |
 | **A5** Jogadas inválidas | `henrique/a5-invalidas` | tests/jogadas.spec.js | 09, 10, 11 |
 
 ### Felipe (tarefas F)
@@ -211,6 +211,8 @@ Para os dois não criarem o mesmo ID: **TC-DM-25 a TC-DM-30** ficam reservados p
 | TC-DM-12 | Contadores durante a partida | `MAOS_PADRAO`. J1 joga 6-6; J2 joga 1-6 na direita; J1 joga 1-3 na direita | `qtd-j1` = 5; `qtd-j2` = 6; `qtd-monte` = 14; `mesa` com 3 peças |
 | TC-DM-31 | Carroça vence a soma em quem começa | `?j1=5-6,0-2&j2=1-1,0-3&monte=` | `vez` = "Jogador 2" (1-1 é a única carroça, mesmo somando menos que 5-6); `mao-j2` mostra as peças e `mao-j1` fica escondida |
 | TC-DM-32 | Abertura obrigatória sem carroça | `?j1=5-6,0-1&j2=4-6,2-3&monte=`. Jogador 1 clica `peca-0-1`; depois clica `peca-5-6` | Depois do 0-1: `mesa` vazia, `mensagem` contém "inválida", `qtd-j1` = 2, `vez` = "Jogador 1". Depois do 5-6: `peca-5-6` dentro da `mesa`, `qtd-j1` = 1, `vez` = "Jogador 2" |
+| TC-DM-33 | Peça gira na ponta esquerda | `MAOS_PADRAO`. J1 joga 6-6; J2 joga 1-6 na esquerda; J1 joga 1-3 na esquerda | Depois do J2: `mesa` = "1-6 6-6", `ponta-esquerda` = 1. Depois do J1: `mesa` = "3-1 1-6 6-6" (a peça girou), `ponta-esquerda` = 3, `ponta-direita` = 6 |
+| TC-DM-34 | Mão visível troca nos dois sentidos | `MAOS_PADRAO`. J1 joga 6-6; J2 joga 1-6 na direita | `vez` = "Jogador 1"; `mao-j2` com 6 peças, todas com `data-oculta` = `true` e sem texto; `mao-j1` mostra as 6 peças restantes de `J1_PADRAO` |
 
 ### Felipe — comprar, passar e fim de jogo
 
