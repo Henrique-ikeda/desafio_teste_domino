@@ -70,3 +70,30 @@ test('TC-DM-08 encaixar na esquerda', async () => {
   // A peça 2-6 está na mesa, mostrada como 2-6.
   expect(within(screen.getByTestId('mesa')).getByTestId('peca-2-6')).toHaveTextContent(/^2-6$/);
 });
+
+test('TC-DM-33 peça gira na ponta esquerda', async () => {
+  // MAOS_PADRAO: J1 abre com 6-6; J2 encaixa 1-6 na ponta esquerda (o 6 da ponta).
+  const user = await abrirJogo(MAOS_PADRAO);
+  await jogar(user, '6-6');
+  await jogar(user, '1-6', 'esquerda');
+
+  // Sem giro: 1-6 fica como está, com o 6 encostado no 6-6 e o 1 na ponta esquerda.
+  expect(mesaComoTexto()).toBe('1-6 6-6');
+  expect(screen.getByTestId('ponta-esquerda')).toHaveTextContent(/^1$/);
+  expect(screen.getByTestId('ponta-direita')).toHaveTextContent(/^6$/);
+  expect(screen.getByTestId('vez')).toHaveTextContent(/^Jogador 1$/);
+
+  // J1 encaixa 1-3 na ponta esquerda (o 1). A peça gira para 3-1, deixando o 3 na ponta.
+  await jogar(user, '1-3', 'esquerda');
+
+  expect(mesaComoTexto()).toBe('3-1 1-6 6-6');
+  expect(screen.getByTestId('ponta-esquerda')).toHaveTextContent(/^3$/);
+  expect(screen.getByTestId('ponta-direita')).toHaveTextContent(/^6$/);
+
+  // A peça 1-3 está na mesa, mostrada já girada como 3-1.
+  expect(within(screen.getByTestId('mesa')).getByTestId('peca-1-3')).toHaveTextContent(/^3-1$/);
+
+  // A vez passou para o J2, e o J1 ficou com 5 peças (7 - 2 jogadas).
+  expect(screen.getByTestId('vez')).toHaveTextContent(/^Jogador 2$/);
+  expect(screen.getByTestId('qtd-j1')).toHaveTextContent(/^5$/);
+});
