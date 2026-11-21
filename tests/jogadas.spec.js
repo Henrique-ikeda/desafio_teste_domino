@@ -107,6 +107,10 @@ test('TC-DM-34 mão visível troca nos dois sentidos', async () => {
 
   // Vez do J1: a mão dele fica visível.
   expect(screen.getByTestId('vez')).toHaveTextContent(/^Jogador 1$/);
+  // A jogada do J2 foi válida: mesa e as duas pontas atualizadas.
+  expect(mesaComoTexto()).toBe('6-6 6-1');
+  expect(screen.getByTestId('ponta-esquerda')).toHaveTextContent(/^6$/);
+  expect(screen.getByTestId('ponta-direita')).toHaveTextContent(/^1$/);
 
   // Mão do J1 visível: as 6 peças restantes de J1_PADRAO (sem a 6-6), com os números, nenhuma escondida.
   const maoJ1 = pecasEm('mao-j1');
