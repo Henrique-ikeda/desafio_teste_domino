@@ -134,3 +134,23 @@ test('TC-DM-34 mão visível troca nos dois sentidos', async () => {
   expect(screen.getByTestId('qtd-j1')).toHaveTextContent(/^6$/);
   expect(screen.getByTestId('qtd-j2')).toHaveTextContent(/^6$/);
 });
+
+test('TC-DM-09 peça que não encaixa', async () => {
+  // MAOS_PADRAO: J1 abre com 6-6 (as duas pontas valem 6). J2 tenta 0-0 na ponta direita: não tem o 6, é inválida.
+  const user = await abrirJogo(MAOS_PADRAO);
+  await jogar(user, '6-6');
+  await jogar(user, '0-0', 'direita');
+
+  // Positivo primeiro: a mensagem avisa que a jogada é inválida.
+  expect(screen.getByTestId('mensagem')).toHaveTextContent(/inválida/i);
+
+  // A peça 0-0 continua na mão do J2 (é a vez dele, então a mão está visível).
+  expect(within(screen.getByTestId('mao-j2')).getByTestId('peca-0-0')).toBeInTheDocument();
+
+  // Nada mudou na mesa, nos contadores nem nas pontas.
+  expect(mesaComoTexto()).toBe('6-6');
+  expect(screen.getByTestId('qtd-j2')).toHaveTextContent(/^7$/);
+  expect(screen.getByTestId('vez')).toHaveTextContent(/^Jogador 2$/);
+  expect(screen.getByTestId('ponta-esquerda')).toHaveTextContent(/^6$/);
+  expect(screen.getByTestId('ponta-direita')).toHaveTextContent(/^6$/);
+});
