@@ -181,3 +181,32 @@ test('TC-DM-05 abertura obrigatória com a carroça', async () => {
   // b. A carroça saiu da mão do J1.
   expect(within(screen.getByTestId('mao-j1')).queryByTestId('peca-6-6')).toBeNull();
 });
+
+test('TC-DM-31 carroça vence a soma em quem começa', async () => {
+  // Cenário sem sorteio: J1 tem 5-6 (soma 11) e 0-2; J2 tem 1-1 (a única carroça, soma 2) e 0-3; monte vazio.
+  // 1-1 é a única carroça, então quem começa é o J2, mesmo somando menos que o 5-6 do J1.
+  const CENARIO = { j1: '5-6,0-2', j2: '1-1,0-3', monte: '' };
+  await abrirJogo(CENARIO);
+
+  expect(screen.getByTestId('vez')).toHaveTextContent(/^Jogador 2$/);
+
+  // Mão do J2 (na vez dele, visível): 2 peças com os números.
+  const maoJ2 = pecasEm('mao-j2');
+  expect(maoJ2).toHaveLength(2);
+  expect(maoJ2.map((p) => p.textContent.trim()).sort()).toEqual(['0-3', '1-1']);
+  for (const p of maoJ2) {
+    expect(p).not.toHaveAttribute('data-oculta', 'true');
+  }
+
+  // Mão do J1 (fora da vez): 2 peças viradas, sem os números.
+  const maoJ1 = pecasEm('mao-j1');
+  expect(maoJ1).toHaveLength(2);
+  for (const p of maoJ1) {
+    expect(p).toHaveAttribute('data-oculta', 'true');
+    expect(p.textContent.trim()).toBe('');
+  }
+
+  // Nada jogado ainda.
+  expect(pecasEm('mesa')).toHaveLength(0);
+});
+
