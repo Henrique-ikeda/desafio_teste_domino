@@ -1,5 +1,5 @@
 // Tarefas A4 e A5 (Henrique): jogadas na mesa. Só pela interface (seção 3 do PLANEJAMENTO.md).
-import { abrirJogo, jogar, mesaComoTexto, pecasEm, screen, within, MAOS_PADRAO, J1_PADRAO, J2_PADRAO } from './helpers.js';
+import { abrirJogo, jogar, mesaComoTexto, peca, pecasEm, screen, within, MAOS_PADRAO, J1_PADRAO, J2_PADRAO } from './helpers.js';
 
 test('TC-DM-06 primeira jogada', async () => {
   // MAOS_PADRAO: o J1 tem a carroça 6-6 e começa. Abertura: basta clicar na peça (sem ponta).
@@ -185,4 +185,25 @@ test('TC-DM-10 ponta errada, depois a certa', async () => {
   // A vez passou para o J2 e o J1 ficou com 5 peças.
   expect(screen.getByTestId('vez')).toHaveTextContent(/^Jogador 2$/);
   expect(screen.getByTestId('qtd-j1')).toHaveTextContent(/^5$/);
+});
+
+test('TC-DM-11 mão escondida não joga', async () => {
+  // MAOS_PADRAO: o J1 começa com 6-6. A peça 1-6 está na mão do J2, escondida na vez do J1:
+  // a peça não pode ser jogada.
+  const user = await abrirJogo(MAOS_PADRAO);
+  await user.click(peca('1-6'));
+  await user.click(screen.getByTestId('ponta-direita'));
+
+  // Positivo primeiro: a vez continua com o J1, e as duas mãos têm 7 peças.
+  expect(screen.getByTestId('vez')).toHaveTextContent(/^Jogador 1$/);
+  expect(screen.getByTestId('qtd-j2')).toHaveTextContent(/^7$/);
+  expect(screen.getByTestId('qtd-j1')).toHaveTextContent(/^7$/);
+
+  // A peça 1-6 continua na mão do J2, escondida (virada, sem os números).
+  const p = within(screen.getByTestId('mao-j2')).getByTestId('peca-1-6');
+  expect(p).toHaveAttribute('data-oculta', 'true');
+  expect(p.textContent.trim()).toBe('');
+
+  // Nada foi para a mesa.
+  expect(pecasEm('mesa')).toHaveLength(0);
 });
