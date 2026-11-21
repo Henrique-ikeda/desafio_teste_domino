@@ -1,6 +1,6 @@
 // Tarefa A2 (Henrique): distribuição e mãos. Só pela interface (seção 3 do PLANEJAMENTO.md):
 // abrirJogo, data-testid e user-event. Sem jest.mock e sem importar js/*.js.
-import { abrirJogo, screen, pecasEm, jogar, mesaComoTexto, MAOS_PADRAO, J1_PADRAO } from './helpers.js';
+import { abrirJogo, screen, within, pecasEm, jogar, mesaComoTexto, MAOS_PADRAO, J1_PADRAO } from './helpers.js';
 
 test('TC-DM-01 distribuição sorteada', async () => {
   // Sem parâmetros: a distribuição é sorteada, então só conferimos regras que valem para qualquer mão.
@@ -153,4 +153,31 @@ test('TC-DM-04 sem carroça, começa a maior soma', async () => {
 
   // Nada jogado ainda.
   expect(pecasEm('mesa')).toHaveLength(0);
+});
+
+test('TC-DM-05 abertura obrigatória com a carroça', async () => {
+  // MAOS_PADRAO: o J1 tem a carroça 6-6, que é a abertura obrigatória.
+  const user = await abrirJogo(MAOS_PADRAO);
+
+  // Passo 1: J1 tenta abrir com 4-6 (não é carroça). A jogada é inválida.
+  await jogar(user, '4-6');
+
+  // a. A mensagem avisa a jogada inválida.
+  expect(screen.getByTestId('mensagem')).toHaveTextContent(/inválida/i);
+  // b. Nada foi para a mesa.
+  expect(pecasEm('mesa')).toHaveLength(0);
+  // c. A mão do J1 continua com 7 peças.
+  expect(screen.getByTestId('qtd-j1')).toHaveTextContent(/^7$/);
+  // d. A vez continua com o J1.
+  expect(screen.getByTestId('vez')).toHaveTextContent(/^Jogador 1$/);
+  // e. A peça 4-6 continua na mão do J1.
+  expect(within(screen.getByTestId('mao-j1')).getByTestId('peca-4-6')).toBeInTheDocument();
+
+  // Passo 2: J1 abre com a carroça 6-6.
+  await jogar(user, '6-6');
+
+  // a. A mesa passa a ter só a carroça.
+  expect(mesaComoTexto()).toBe('6-6');
+  // b. A carroça saiu da mão do J1.
+  expect(within(screen.getByTestId('mao-j1')).queryByTestId('peca-6-6')).toBeNull();
 });
