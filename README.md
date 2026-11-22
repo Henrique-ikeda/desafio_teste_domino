@@ -1,5 +1,7 @@
 # desafio_teste_domino
 
+[![Testes](https://github.com/Henrique-ikeda/desafio_teste_domino/actions/workflows/testes.yml/badge.svg)](https://github.com/Henrique-ikeda/desafio_teste_domino/actions/workflows/testes.yml)
+
 Desafio de testes: casos de teste para testar uma **partida de dominó para 2 jogadores**, com **casos de teste em JavaScript para testar JavaScript** (Jest + Testing Library).
 
 ## Especificação do desafio
@@ -17,8 +19,8 @@ Regras completas, contrato da tela e divisão das tarefas: [PLANEJAMENTO.md](PLA
 
 | Nome | RA | GitHub | Parte no trabalho |
 |---|---|---|---|
-| Henrique | RA_HENRIQUE | [Henrique-ikeda](https://github.com/Henrique-ikeda) | Tarefas A1–A5: estrutura do projeto e 12 casos de teste (distribuição, quem começa e jogadas na mesa) |
-| Felipe | RA_FELIPE | [GITHUB_FELIPE](https://github.com/GITHUB_FELIPE) | Tarefas F1–F5: CI, README e 12 casos de teste (compra, passar, bater, jogo trancado e nova partida) |
+| Henrique Kendi Ikeda | 24039456-2 | [Henrique-ikeda](https://github.com/Henrique-ikeda) | Tarefas A1–A5: estrutura do projeto e 16 casos de teste: 01–12 e 31–34 (distribuição, quem começa e jogadas na mesa) |
+| Felipe Galeti Gôngora | 24036480-2 | [FGaleti](https://github.com/FGaleti) | Tarefas F1–F5: CI, README e 18 casos de teste: 13–24 e os adicionais 25–30 (compra, passar, bater, jogo trancado e nova partida) |
 
 As contribuições de cada um aparecem em **Insights → Contributors** e nos commits.
 
@@ -36,15 +38,18 @@ npx jest tests/<arquivo>.spec.js -t "TC-DM-NN"   # um caso só
 
 ## Funcionamento dos casos de teste
 
+> **Aviso para o corretor:** `npm test` termina com falhas **de propósito** (o jogo não é implementado; a entrega são os casos de teste). O comando que valida a entrega é `npm run verificar`, que sai com código 0 quando todos os testes falham pelo motivo certo.
+
 **Situação:** somente os casos de teste. O jogo não está implementado, então **todos os testes falham de propósito**, pelo motivo certo (o comportamento ainda não existe). O `npm run verificar` confere isso.
 
 - **Ferramentas:** [Jest](https://jestjs.io) roda os testes; [Testing Library](https://testing-library.com) (`@testing-library/dom`, `user-event` e `jest-dom`) simula o jogador; o [jsdom](https://github.com/jsdom/jsdom) faz o papel do navegador, sem precisar abrir um.
-- **Testes de interface:** cada teste abre o `index.html` do jogo pela função `abrirJogo(params)` de `tests/helpers.js`, clica como um jogador e confere o que aparece na tela. Os testes não chamam funções internas do jogo.
+- **Testes de interface:** cada teste abre o `index.html` do jogo pela função `abrirJogo(params)` de `tests/helpers.js`, clica como um jogador e confere o que aparece na tela. O `abrirJogo` carrega o `js/main.js` do mesmo jeito que o navegador carrega o `<script>` da página (com o jogo vazio, nada aparece na tela); os testes nunca chamam funções nem leem variáveis do jogo, só clicam e conferem a tela.
 - **Elementos da tela:** encontrados pelo atributo `data-testid` (`mao-j1`, `mao-j2`, `mesa`, `peca-A-B`, `ponta-esquerda`, `ponta-direita`, `qtd-j1`, `qtd-j2`, `qtd-monte`, `vez`, `mensagem`, botões). Cada peça tem `data-testid` = `peca-<menor>-<maior>` e fica dentro da mão ou da mesa; na mesa, o texto mostra a peça já virada (ex.: `2-6` à esquerda de `6-6`).
 - **Sem depender de sorte:** as mãos e o monte são passados pelos parâmetros de URL `j1`, `j2` e `monte`. Peças não listadas ficam fora da partida, então cada regra (comprar, passar, bater, trancar) é montada com mãos de 1 a 3 peças. A partida completa usa `J1_PADRAO`, `J2_PADRAO` e `MONTE_PADRAO` (7 + 7 + 14).
 - **Rastreabilidade:** cada teste tem no título o ID do caso (`TC-DM-NN`), o mesmo da tabela abaixo e da seção 5 do PLANEJAMENTO.md. A [matriz de cobertura](docs/MATRIZ-COBERTURA.md) liga cada regra do jogo aos seus casos.
 - **Metodologia:** TDD, um caso de teste por vez: escrever, rodar, ver falhar pelo motivo certo e fazer o commit `test:`. Uso de IA documentado em [docs/TDD-COM-IA.md](docs/TDD-COM-IA.md).
-- **Integração contínua:** o GitHub Actions roda `npm ci` e `npm run verificar` em todo push e Pull Request.
+- **Integração contínua:** o GitHub Actions ([`.github/workflows/testes.yml`](.github/workflows/testes.yml)) roda `npm ci` e `npm run verificar` em todo push e Pull Request, numa matriz Node 18, 20 e 22 × Ubuntu e Windows. A saída do verificador e o relatório JSON do Jest ficam como artefatos de cada execução. O `npm run verificar:completo` (todo TC do plano tem teste) roda manualmente ou em PR com o rótulo `entrega`.
+- **Validação dos testes:** falhar pelo motivo certo não prova que o teste está certo. Cada integrante rodou os seus testes contra uma implementação de referência temporária (fora do repositório) e contra defeitos plantados: [validação do Henrique](docs/VALIDACAO-TESTES-HENRIQUE.md) e [validação do Felipe](docs/VALIDACAO-TESTES-FELIPE.md).
 
 ## Casos de teste (28)
 
