@@ -64,11 +64,60 @@ Mesmo método da [validação do Henrique](VALIDACAO-TESTES-HENRIQUE.md). Num re
 
 ## Achados
 
-- **Bloqueio de jogada depois do fim só é testado pelos botões.** Depois de trancar, ninguém tem jogada (é a definição de trancado). No TC-DM-21, depois da batida do J2, o J1 só tem o 0-0, que não encaixa no 6 nem no 1. Então um jogo que bloqueia comprar e passar no fim, mas ainda **deixa jogar peça**, passa em todos os testes (mutante 22). Para pegar isso é preciso um cenário em que o outro jogador ainda tem peça que encaixa quando alguém bate. Sugestão de caso para a dupla (os IDs 25–30 do Felipe já foram usados, então o ID fica a combinar):
+- **Bloqueio de jogada depois do fim só é testado pelos botões.** Depois de trancar, ninguém tem jogada (é a definição de trancado). No TC-DM-21, depois da batida do J2, o J1 só tem o 0-0, que não encaixa no 6 nem no 1. Então um jogo que bloqueia comprar e passar no fim, mas ainda **deixa jogar peça**, passa em todos os testes (mutante 22). Para pegar isso é preciso um cenário em que o outro jogador ainda tem peça que encaixa quando alguém bate. Sugestão de caso para a dupla (virou o TC-DM-43 na F6, ver a seção abaixo):
 
   | ID | Cenário | Parâmetros / passos | Resultado esperado |
   |---|---|---|---|
-  | TC-DM-?? | Depois de bater, o outro não joga nem peça que encaixa | `?j1=6-6&j2=1-6,0-0&monte=`. J1 joga 6-6 (bate); clicar `peca-1-6` e depois `ponta-direita` | `mensagem` = "Jogador 1 venceu!"; `mesa` = "6-6"; `peca-1-6` continua em `mao-j2`; `qtd-j2` = 2 |
+  | TC-DM-43 | Depois de bater, o outro não joga nem peça que encaixa | `?j1=6-6&j2=1-6,0-0&monte=`. J1 joga 6-6 (bate); clicar `peca-1-6` e depois `ponta-direita` | `mensagem` = "Jogador 1 venceu!"; `mesa` = "6-6"; `peca-1-6` continua em `mao-j2`; `qtd-j2` = 2 |
+
+## Lacunas fechadas (F6)
+
+Depois da entrega dos 34 TCs, uma auditoria repetiu a validação com uma referência nova (só seções 1 e 3, fora do repositório) e um painel maior de defeitos plantados. A suíte antiga matava **40 de 62** mutantes. Os 22 sobreviventes eram lacunas reais (nenhum é equivalente: todos aparecem na tela). Os TC-DM-35 a 53 (`tests/lacunas-felipe.spec.js`) foram escritos para matar exatamente esses 22.
+
+| Verificação | Antes (34 TCs) | Depois (53 TCs) |
+|---|---|---|
+| Suíte contra a referência | 34/34 | **54/54** (53 IDs; o TC-DM-41 tem 2 casos) |
+| 3 rodadas seguidas | 34/34 nas 3 | 54/54 nas 3 |
+| Variantes da referência (render com `setTimeout`, abertura `5-6` × `6-5`, desempate de soma J1 × J2, pontos sempre visíveis, e as quatro juntas) | 34/34 | 54/54 em todas |
+| Mutantes mortos | **40/62** | **62/62** |
+
+### Mutante → TCs novos que o matam
+
+| Mutante (defeito plantado) | Antes | Pego por |
+|---|---|---|
+| J2 abre com qualquer peça | sobrevivia | TC-DM-35, 46 |
+| Peça da mão escondida pode ser jogada (em qualquer momento) — é o mutante 14 do Henrique | sobrevivia | TC-DM-36 |
+| Peça da mão escondida do J1 pode ser jogada | sobrevivia | TC-DM-36 |
+| Peça da mão escondida pode ser jogada com a mesa não vazia | sobrevivia | TC-DM-36 |
+| `data-selecionada` nunca é marcado | sobrevivia | TC-DM-37 |
+| Só o J2 consegue comprar | sobrevivia | TC-DM-38 |
+| Só o J2 consegue passar | sobrevivia | TC-DM-38, 39 |
+| "Tem jogada" olha só a ponta direita | sobrevivia | TC-DM-40, 48 |
+| "Tem jogada" olha só a ponta esquerda | sobrevivia | TC-DM-38, 39, 40 |
+| Trancado com diferença de até 1 ponto vira empate | sobrevivia | TC-DM-41 |
+| Depois do fim, a peça que encaixa ainda entra (sem aviso) — é o mutante 22 acima | sobrevivia | TC-DM-43 |
+| Nova partida mantém a vez de quem estava jogando | sobrevivia | TC-DM-42, 44, 52, 53 |
+| Nova partida não reabre o jogo depois de trancar | sobrevivia | TC-DM-44 |
+| A abertura aceita qualquer carroça (não só a maior) | sobrevivia | TC-DM-45 |
+| Sem carroça, começa sempre o J1 | sobrevivia | TC-DM-46 |
+| Pontas erradas depois de abrir com peça que não é carroça | sobrevivia | TC-DM-46 |
+| Depois de bater, ainda compra (monte com peças) | sobrevivia | TC-DM-47 |
+| Batida pela ponta esquerda não conta | sobrevivia | TC-DM-48 |
+| Trancado logo depois de uma compra dá sempre vitória ao J1 | sobrevivia | TC-DM-49 |
+| Empate só reconhecido com 5 × 5 | sobrevivia | TC-DM-50 |
+| Não tranca quando a 2ª compra seguida esvazia o monte | sobrevivia | TC-DM-51 |
+| Nova partida devolve o monte em outra ordem | sobrevivia | TC-DM-52 |
+
+Dois mutantes do painel já eram mortos pela suíte antiga e **não** ganharam TC: "trancado após compra inverte o vencedor" (TC-DM-30) e "clicar só na peça, com a mesa não vazia, já joga" (TC-DM-08, 10, 33).
+
+### Atualização dos achados anteriores
+
+- **Mutante 22 deste documento** (fim bloqueia os botões, mas ainda deixa jogar peça): **fechado** pelo TC-DM-43. Na referência da auditoria, o TC-DM-21 só o pegava quando o jogo mostrava "inválida" depois do fim (a mensagem de vitória era trocada); na versão silenciosa ele sobrevivia.
+- **Mutante 14 do Henrique** (permite jogar peça da mão escondida): na referência da auditoria ele **sobrevivia** ao TC-DM-11, porque o TC-DM-11 usa a mesa vazia e a regra da abertura já recusa a peça do outro. **Fechado** pelo TC-DM-36, que tenta a jogada no meio da partida, nos dois sentidos.
+
+### Ambiguidades que os TCs novos evitam de propósito
+
+Nenhum TC novo confere: a orientação da abertura sem carroça (o TC-DM-46 compara as pontas sem ordem), a troca de seleção entre duas peças (o TC-DM-37 só confere a peça clicada), mensagens durante compra/passe ou depois do fim além das que a seção 5 já fixa, `vez` depois do fim, nem pontos antes de trancar.
 
 ## Ambiguidades da especificação (decisão pendente da dupla)
 

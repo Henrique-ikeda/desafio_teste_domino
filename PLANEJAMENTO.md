@@ -109,6 +109,7 @@ desafio_teste_domino/
 ├── tests/jogadas.spec.js         Henrique  (A4, A5)
 ├── tests/compra.spec.js          Felipe    (F2, F3)
 ├── tests/fim-de-jogo.spec.js     Felipe    (F4, F5)
+├── tests/lacunas-felipe.spec.js  Felipe    (F6)
 ├── .github/workflows/testes.yml  Felipe    (F1)
 ├── README.md                     Felipe    (F1; cada um atualiza a sua parte da tabela)
 ├── babel.config.cjs              A1  só para os testes (Jest): ESM → CommonJS
@@ -184,10 +185,11 @@ Cada integrante é **dono de arquivos de teste diferentes** (coluna "Arquivos").
 | **F3** Passar a vez | `felipe/f3-passar` | tests/compra.spec.js | 15, 16, 24 |
 | **F4** Bater e jogo trancado | `felipe/f4-fim` | tests/fim-de-jogo.spec.js | 17, 18, 19, 20, 25, 26, 30 |
 | **F5** Fim bloqueia e nova partida | `felipe/f5-nova-partida` | tests/fim-de-jogo.spec.js | 21, 22, 27, 28, 29 |
+| **F6** Lacunas de cobertura (casos adicionais) | `felipe/f6-lacunas` | tests/lacunas-felipe.spec.js | 35 a 53 |
 
 ### IDs para casos de teste adicionais
 
-Para os dois não criarem o mesmo ID: **TC-DM-25 a TC-DM-30** ficam reservados para o Felipe e os casos adicionais do Henrique começam em **TC-DM-31**. Todo TC novo entra na seção 5, na [matriz](docs/MATRIZ-COBERTURA.md) e na tabela do README, no mesmo PR do teste.
+Para os dois não criarem o mesmo ID: **TC-DM-25 a TC-DM-30** ficam reservados para o Felipe e os casos adicionais do Henrique começam em **TC-DM-31**. **TC-DM-35 a TC-DM-54** ficam reservados para o Felipe (tarefa F6, lacunas de cobertura; a F6 usou 35 a 53 e o 54 fica livre); casos novos do Henrique passam a usar **TC-DM-55** em diante. Todo TC novo entra na seção 5, na [matriz](docs/MATRIZ-COBERTURA.md) e na tabela do README, no mesmo PR do teste.
 
 ## 5. Casos de teste (interface)
 
@@ -236,6 +238,32 @@ Para os dois não criarem o mesmo ID: **TC-DM-25 a TC-DM-30** ficam reservados p
 | TC-DM-27 | Nada funciona depois de trancar | Cenário do TC-DM-19 (`?j1=6-6,0-1&j2=2-3,4-5&monte=`): J1 joga 6-6 e o jogo tranca; clicar `peca-0-1` e depois `ponta-direita`; clicar `btn-comprar` e `btn-passar` | `btn-comprar` e `btn-passar` desabilitados; `peca-0-1` continua em `mao-j1`; `qtd-j1` = 1; `mesa` = "6-6"; `mensagem` continua "Jogo trancado! Jogador 1 venceu" |
 | TC-DM-28 | Nova partida depois do fim reabre o jogo | Cenário do TC-DM-18 (`?j1=6-6,0-0&j2=1-6&monte=`): J1 joga 6-6; J2 joga 1-6 na direita e bate; clicar `btn-nova-partida`; J1 joga 6-6 | Antes do 6-6: `mesa` sem peças, `qtd-j1` = 2, `qtd-j2` = 1, `qtd-monte` = 0, `vez` = "Jogador 1", `mensagem` vazia. Depois: `mesa` = "6-6" e `vez` = "Jogador 2" |
 | TC-DM-29 | Nova partida sem parâmetros | Sem parâmetros. Jogar a peça obrigatória da vez (lida na mão visível: a maior carroça ou, sem carroça, a maior soma); clicar `btn-nova-partida` | `qtd-j1` = 7, `qtd-j2` = 7, `qtd-monte` = 14; `mesa` sem peças; `mensagem` vazia; as 14 peças das mãos com `data-testid` válidos e diferentes |
+
+### Felipe — lacunas de cobertura (F6)
+
+Casos adicionais que fecham lacunas apontadas pela auditoria (defeitos plantados na referência que a suíte anterior deixava passar). Mesmas convenções da seção 5.
+
+| ID | Cenário | Parâmetros / passos | Resultado esperado |
+|---|---|---|---|
+| TC-DM-35 | O J2 também só abre com a peça obrigatória | `?j1=1-6,0-4&j2=6-6,5-6&monte=`. J2 clica `peca-5-6`; depois clica `peca-6-6` | Depois do 5-6: `mesa` vazia, `mensagem` contém "inválida", `qtd-j2` = 2, `vez` = "Jogador 2". Depois do 6-6: `mesa` = "6-6", `qtd-j2` = 1, `vez` = "Jogador 1" |
+| TC-DM-36 | Mão escondida não joga no meio da partida, nos dois sentidos | `MAOS_PADRAO`. J1 joga 6-6; J2 clica `peca-4-6` (mão do J1) e `ponta-direita`; J2 joga 1-6 na direita; J1 clica `peca-2-6` (mão do J2) e `ponta-esquerda` | Depois do 1º clique: `mesa` = "6-6", `peca-4-6` continua em `mao-j1` com `data-oculta` = `true`, `qtd-j1` = 6, `vez` = "Jogador 2". Depois do 1-6 e do 2º clique: `mesa` = "6-6 6-1", `peca-2-6` continua em `mao-j2` com `data-oculta` = `true`, `qtd-j2` = 6, `vez` = "Jogador 1" |
+| TC-DM-37 | Peça clicada fica com data-selecionada | `MAOS_PADRAO`. J1 joga 6-6; J2 clica só `peca-1-6` (sem clicar na ponta) | `peca-1-6` com `data-selecionada` = `true`; `peca-2-6` sem; `mesa` = "6-6"; `vez` = "Jogador 2" |
+| TC-DM-38 | O J1 também compra do monte | `?j1=6-6,0-3&j2=1-6,1-2&monte=2-5`. J1 joga 6-6; J2 joga 1-6 na direita; J1 clica `btn-comprar` | Antes: `btn-comprar` habilitado e `btn-passar` desabilitado. Depois: `peca-2-5` em `mao-j1` com o texto "2-5" (visível), `qtd-j1` = 2, `qtd-j2` = 1, `qtd-monte` = 0, `vez` = "Jogador 1", `btn-comprar` desabilitado e `btn-passar` habilitado |
+| TC-DM-39 | O J1 também passa a vez | `?j1=6-6,0-0&j2=1-6,1-2&monte=`. J1 joga 6-6; J2 joga 1-6 na direita; J1 clica `btn-passar` | Antes: `btn-comprar` desabilitado e `btn-passar` habilitado. Depois: `vez` = "Jogador 2"; `mesa` = "6-6 6-1"; `qtd-j1` = 1; `mensagem` sem "venceu" nem "trancado" |
+| TC-DM-40 | Peça que encaixa numa ponta só já é jogada | `?j1=6-6,4-6,0-3&j2=1-6,0-1&monte=2-5`. J1 joga 6-6; J2 joga 1-6 na direita (pontas 6 e 1); conferir os botões do J1; J1 joga 4-6 na esquerda; conferir os botões do J2 | Vez do J1 (o 4-6 só encaixa na esquerda): `btn-comprar` e `btn-passar` desabilitados. Depois do 4-6: `mesa` = "4-6 6-6 6-1". Vez do J2 (o 0-1 só encaixa na direita): `btn-comprar` e `btn-passar` desabilitados |
+| TC-DM-41 | Trancado com diferença de 1 ponto | `?j1=6-6,2-3&j2=0-4&monte=` e `?j1=6-6,1-3&j2=0-5&monte=`. J1 joga 6-6 | 1º: "Jogo trancado! Jogador 2 venceu"; `pontos-j1` = 5; `pontos-j2` = 4. 2º: "Jogo trancado! Jogador 1 venceu"; `pontos-j1` = 4; `pontos-j2` = 5 |
+| TC-DM-42 | Nova partida na vez do J2 devolve a vez ao J1 | `MAOS_PADRAO`. J1 joga 6-6; na vez do J2, clicar `btn-nova-partida` | `vez` = "Jogador 1"; `mesa` sem peças; `qtd-j1` = 7, `qtd-j2` = 7, `qtd-monte` = 14; `mensagem` vazia; `mao-j1` visível e `mao-j2` toda com `data-oculta` = `true` |
+| TC-DM-43 | Depois do fim, nem a peça que encaixaria é jogada | `?j1=6-6&j2=1-6,0-0&monte=`. J1 joga 6-6 (bate); J2 clica `peca-1-6` e `ponta-direita` | `mensagem` continua "Jogador 1 venceu!"; `mesa` = "6-6"; `peca-1-6` continua em `mao-j2`; `qtd-j2` = 2 |
+| TC-DM-44 | Nova partida depois de trancar reabre o jogo | Cenário do TC-DM-19 (`?j1=6-6,0-1&j2=2-3,4-5&monte=`): J1 joga 6-6 e o jogo tranca; clicar `btn-nova-partida`; J1 joga 6-6 | Depois da nova partida: `mesa` sem peças, `qtd-j1` = 2, `qtd-j2` = 2, `qtd-monte` = 0, `vez` = "Jogador 1", `mensagem` vazia, `peca-6-6` em `mao-j1`. Depois do 6-6: `mesa` = "6-6" e "Jogo trancado! Jogador 1 venceu" |
+| TC-DM-45 | Abertura recusa outra carroça que não é a maior | `?j1=5-5,6-6,0-1&j2=2-6,3-4&monte=`. J1 clica `peca-5-5`; depois clica `peca-6-6` | Depois do 5-5: `mesa` vazia, `mensagem` contém "inválida", `qtd-j1` = 3, `vez` = "Jogador 1". Depois do 6-6: `mesa` = "6-6", `qtd-j1` = 2 |
+| TC-DM-46 | Sem carroça, o J2 começa pela maior soma; pontas certas | `?j1=4-6,2-3&j2=5-6,0-1&monte=`. J2 clica `peca-0-1`; depois clica `peca-5-6` | `vez` = "Jogador 2" no início (5-6 soma 11 contra 10 do 4-6). Depois do 0-1: `mesa` vazia e "inválida". Depois do 5-6: `peca-5-6` dentro da `mesa`, `qtd-j2` = 1, `vez` = "Jogador 1"; as duas pontas são 5 e 6 (em qualquer ordem) |
+| TC-DM-47 | Depois de bater, não se compra, mesmo com monte cheio | `?j1=6-6&j2=0-0,1-2&monte=0-1`. J1 joga 6-6 (bate); J2 clica `btn-comprar` | `mensagem` = "Jogador 1 venceu!"; `btn-comprar` e `btn-passar` desabilitados; `qtd-monte` = 1; `qtd-j2` = 2; `peca-0-1` não está em `mao-j2` |
+| TC-DM-48 | O J1 bate no meio, pela ponta esquerda | `?j1=6-6,2-6&j2=1-6,0-0&monte=`. J1 joga 6-6; J2 joga 1-6 na direita; J1 joga 2-6 na esquerda | `mesa` = "2-6 6-6 6-1"; `mensagem` = "Jogador 1 venceu!"; `qtd-j1` = 0; `qtd-j2` = 1; `btn-comprar` e `btn-passar` desabilitados |
+| TC-DM-49 | Trancado depois da compra do J2, com vitória do J2 | `?j1=6-6,4-5&j2=0-1&monte=2-3`. J1 joga 6-6; J2 clica `btn-comprar` | Antes: `btn-comprar` habilitado. Depois: `qtd-monte` = 0; `qtd-j2` = 2; `mensagem` = "Jogo trancado! Jogador 2 venceu"; `pontos-j1` = 9; `pontos-j2` = 6 |
+| TC-DM-50 | Empate no trancado com pontos diferentes de 5 | `?j1=6-6,1-2&j2=0-3&monte=`. J1 joga 6-6 | `mensagem` = "Jogo trancado! Empate"; `pontos-j1` = 3; `pontos-j2` = 3 |
+| TC-DM-51 | Duas compras esvaziam o monte e trancam na última | `?j1=6-6,0-3&j2=2-3&monte=4-5,1-2`. J1 joga 6-6; J2 clica `btn-comprar` duas vezes | Depois da 1ª: `qtd-monte` = 1, `qtd-j2` = 2, `mensagem` sem "trancado", `btn-comprar` habilitado. Depois da 2ª: `qtd-monte` = 0, `qtd-j2` = 3, "Jogo trancado! Jogador 1 venceu", `pontos-j1` = 3, `pontos-j2` = 17 |
+| TC-DM-52 | Nova partida devolve o monte na mesma ordem | `?j1=6-6,1-1&j2=0-0,1-2&monte=0-1,2-6,3-4`. J1 joga 6-6; J2 compra; `btn-nova-partida`; J1 joga 6-6; J2 compra de novo | 1ª compra: `peca-0-1` em `mao-j2`. Depois da nova partida: `qtd-monte` = 3. 2ª compra: `peca-0-1` em `mao-j2` e `peca-3-4` fora dela, `qtd-monte` = 2, `qtd-j2` = 3 |
+| TC-DM-53 | Nova partida devolve a vez a quem começa, também o J2 | `?j1=1-5,0-3&j2=5-5,0-0&monte=`. J2 começa e joga 5-5 (vez do J1); clicar `btn-nova-partida`; J2 joga 5-5 | `vez` = "Jogador 2" no início e depois da nova partida; `mesa` sem peças; `qtd-j1` = 2, `qtd-j2` = 2; `mensagem` vazia; `mao-j2` visível e `mao-j1` toda com `data-oculta` = `true`. Depois do 5-5: `mesa` = "5-5" e `vez` = "Jogador 1" |
 
 ## 6. Fluxo de trabalho no Git
 
