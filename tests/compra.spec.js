@@ -1,6 +1,6 @@
 // Tarefas F2 e F3 (Felipe): comprar do monte e passar a vez. Só pela interface (seção 3 do PLANEJAMENTO.md):
 // abrirJogo, data-testid e user-event. Sem jest.mock e sem importar js/*.js.
-import { abrirJogo, jogar, mesaComoTexto, screen, within, MAOS_PADRAO } from './helpers.js';
+import { abrirJogo, jogar, mesaComoTexto, pecasEm, screen, within, MAOS_PADRAO } from './helpers.js';
 
 test('TC-DM-13 comprar só sem jogada', async () => {
   // MAOS_PADRAO: J1 tem a carroça 6-6 e começa. Comprar só vale sem jogada: com o 6-6 (J1) e com 1-6/2-6 (J2), fica desabilitado.
@@ -79,4 +79,38 @@ test('TC-DM-14 comprar até poder jogar', async () => {
   expect(screen.getByTestId('ponta-direita')).toHaveTextContent(/^2$/);
   expect(screen.getByTestId('qtd-j2')).toHaveTextContent(/^3$/);
   expect(screen.getByTestId('vez')).toHaveTextContent(/^Jogador 1$/);
+});
+
+test('TC-DM-23 compra vai para a mão certa e fica visível', async () => {
+  // COMPRA_ATE_JOGAR: J1 abre com 6-6; o J2 (0-0, 1-2) compra uma vez e recebe o topo do monte (0-1).
+  const user = await abrirJogo(COMPRA_ATE_JOGAR);
+
+  // J1 joga 6-6 (abertura, sem ponta). Agora é a vez do J2.
+  await jogar(user, '6-6');
+
+  // Antes da compra: vez do J2, 3 peças no monte, 1 peça na mão do J1.
+  expect(screen.getByTestId('vez')).toHaveTextContent(/^Jogador 2$/);
+  expect(screen.getByTestId('qtd-monte')).toHaveTextContent(/^3$/);
+  expect(screen.getByTestId('qtd-j1')).toHaveTextContent(/^1$/);
+
+  // J2 compra uma vez: sai o 0-1 (topo do monte).
+  await user.click(screen.getByTestId('btn-comprar'));
+
+  // Depois da compra: 0-1 na mão do J2 e visível (não oculta), por ser a vez dele.
+  const comprada = within(screen.getByTestId('mao-j2')).getByTestId('peca-0-1');
+  expect(comprada).toHaveTextContent(/^0-1$/);
+  expect(comprada).not.toHaveAttribute('data-oculta', 'true');
+
+  // Contagens: J2 com 3 peças na mão, 2 no monte. Comprar não passa a vez.
+  expect(screen.getByTestId('qtd-j2')).toHaveTextContent(/^3$/);
+  expect(screen.getByTestId('qtd-monte')).toHaveTextContent(/^2$/);
+  expect(screen.getByTestId('vez')).toHaveTextContent(/^Jogador 2$/);
+
+  // A peça não foi para a mão do J1: sem 0-1 nela, e a contagem dele continua 1.
+  expect(within(screen.getByTestId('mao-j1')).queryByTestId('peca-0-1')).toBeNull();
+  expect(screen.getByTestId('qtd-j1')).toHaveTextContent(/^1$/);
+  expect(pecasEm('mao-j1')).toHaveLength(1);
+
+  // A mão visível do J2 tem exatamente as 3 peças: 0-0, 0-1 e 1-2.
+  expect(pecasEm('mao-j2').map((p) => p.textContent.trim()).sort()).toEqual(['0-0', '0-1', '1-2']);
 });
