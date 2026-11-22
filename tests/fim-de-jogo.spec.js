@@ -135,3 +135,48 @@ test('TC-DM-25 trancado com vitória do Jogador 2', async () => {
   expect(screen.getByTestId('qtd-j1')).toHaveTextContent(/^1$/);
   expect(screen.getByTestId('qtd-j2')).toHaveTextContent(/^1$/);
 });
+
+// O J1 abre com 6-6. O J2 (0-0) não tem 6 e o monte está vazio: passa. O jogo ainda não tranca, porque o J1 tem 3-6.
+// O J1 joga 3-6 na direita (pontas 6 e 3) e aí ninguém encaixa (J1: 1-2; J2: 0-0): tranca.
+// Pontos: J1 = 1+2 = 3; J2 = 0+0 = 0. Vence o J2.
+const TRANCA_DEPOIS_DO_PASSE = { j1: '6-6,3-6,1-2', j2: '0-0', monte: '' };
+
+test('TC-DM-26 trancado depois de um passe', async () => {
+  // TRANCA_DEPOIS_DO_PASSE: o J1 tem 6-6, 3-6 e 1-2; o J2 tem 0-0; o monte está vazio. Abertura: basta clicar no 6-6.
+  const user = await abrirJogo(TRANCA_DEPOIS_DO_PASSE);
+  await jogar(user, '6-6');
+
+  // Depois do 6-6, antes do passe: é a vez do J2, o botão de passar está habilitado e o J2 tem 1 peça (0-0).
+  expect(screen.getByTestId('vez')).toHaveTextContent(/^Jogador 2$/);
+  expect(screen.getByTestId('btn-passar')).toBeEnabled();
+  expect(screen.getByTestId('qtd-j2')).toHaveTextContent(/^1$/);
+
+  // O J2 passa a vez: não tem 6 e o monte está vazio.
+  await user.click(screen.getByTestId('btn-passar'));
+
+  // Depois do passe: a vez voltou para o J1, a mensagem está vazia (o jogo não trancou) e a mesa segue com só o 6-6.
+  expect(screen.getByTestId('vez')).toHaveTextContent(/^Jogador 1$/);
+  expect(screen.getByTestId('mensagem').textContent.trim()).toBe('');
+  expect(mesaComoTexto()).toBe('6-6');
+  // O J1 ainda tem as 2 peças dele (3-6 e 1-2) e pode jogar.
+  expect(screen.getByTestId('qtd-j1')).toHaveTextContent(/^2$/);
+
+  // O J1 joga 3-6 na ponta direita: a mesa fica 6-6 6-3, com as pontas 6 e 3.
+  await jogar(user, '3-6', 'direita');
+
+  // Trancado: a mesa tem 6-6 6-3, na ordem certa.
+  expect(mesaComoTexto()).toBe('6-6 6-3');
+  expect(screen.getByTestId('ponta-esquerda')).toHaveTextContent(/^6$/);
+  expect(screen.getByTestId('ponta-direita')).toHaveTextContent(/^3$/);
+
+  // A mensagem é a de jogo trancado com vitória do J2, exata.
+  expect(screen.getByTestId('mensagem')).toHaveTextContent(/^Jogo trancado! Jogador 2 venceu$/);
+
+  // Pontos: o J1 soma 3 (1 + 2) e o J2 soma 0 (0 + 0). Menos pontos vence.
+  expect(screen.getByTestId('pontos-j1')).toHaveTextContent(/^3$/);
+  expect(screen.getByTestId('pontos-j2')).toHaveTextContent(/^0$/);
+
+  // J1 ficou com 1 peça (1-2) e J2 segue com 1 peça (0-0).
+  expect(screen.getByTestId('qtd-j1')).toHaveTextContent(/^1$/);
+  expect(screen.getByTestId('qtd-j2')).toHaveTextContent(/^1$/);
+});
