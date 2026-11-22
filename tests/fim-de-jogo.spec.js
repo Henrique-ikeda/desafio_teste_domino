@@ -54,3 +54,30 @@ test('TC-DM-18 J2 bate', async () => {
   // J1 continua com a peça 0-0 que não jogou.
   expect(screen.getByTestId('qtd-j1')).toHaveTextContent(/^1$/);
 });
+
+// O J1 abre com 6-6. Depois ninguém tem 6 (J1: 0-1; J2: 2-3, 4-5) e o monte está vazio: tranca logo depois da jogada.
+// Pontos: J1 = 0+1 = 1; J2 = 2+3+4+5 = 14. Vence quem tem menos: o J1.
+const TRANCA_J1_VENCE = { j1: '6-6,0-1', j2: '2-3,4-5', monte: '' };
+
+test('TC-DM-19 jogo trancado', async () => {
+  // TRANCA_J1_VENCE: o J1 tem 6-6 e 0-1, o J2 tem 2-3 e 4-5, o monte está vazio. Abertura: basta clicar no 6-6.
+  const user = await abrirJogo(TRANCA_J1_VENCE);
+  await jogar(user, '6-6');
+
+  // Trancado logo depois do 6-6: a mensagem é a de jogo trancado com vitória do J1, exata.
+  expect(screen.getByTestId('mensagem')).toHaveTextContent(/^Jogo trancado! Jogador 1 venceu$/);
+
+  // Pontos: o J1 soma 1 (0 + 1) e o J2 soma 14 (2 + 3 + 4 + 5). Menos pontos vence.
+  expect(screen.getByTestId('pontos-j1')).toHaveTextContent(/^1$/);
+  expect(screen.getByTestId('pontos-j2')).toHaveTextContent(/^14$/);
+
+  // Monte segue vazio: ninguém comprou.
+  expect(screen.getByTestId('qtd-monte')).toHaveTextContent(/^0$/);
+
+  // A mesa tem só a carroça 6-6.
+  expect(mesaComoTexto()).toBe('6-6');
+
+  // J1 ficou com a peça 0-1, e J2 segue com as 2 peças dele (2-3 e 4-5).
+  expect(screen.getByTestId('qtd-j1')).toHaveTextContent(/^1$/);
+  expect(screen.getByTestId('qtd-j2')).toHaveTextContent(/^2$/);
+});
