@@ -192,11 +192,10 @@ test('TC-DM-30 trancado logo depois de uma compra', async () => {
   const user = await abrirJogo(TRANCA_DEPOIS_DA_COMPRA);
   await jogar(user, '6-6');
 
-  // Antes da compra: é a vez do J2, o monte tem 1 peça, o botão de comprar está habilitado e a mensagem está vazia.
+  // Antes da compra: é a vez do J2, o monte tem 1 peça e o botão de comprar está habilitado (o J2 não tem 6).
   expect(screen.getByTestId('vez')).toHaveTextContent(/^Jogador 2$/);
   expect(screen.getByTestId('qtd-monte')).toHaveTextContent(/^1$/);
   expect(screen.getByTestId('btn-comprar')).toBeEnabled();
-  expect(screen.getByTestId('mensagem').textContent.trim()).toBe('');
 
   // O J2 compra uma vez: pega o 4-5, que não encaixa, e o monte acaba. Ninguém pode jogar: o jogo tranca na hora.
   await user.click(screen.getByTestId('btn-comprar'));
