@@ -114,3 +114,122 @@ test('TC-DM-23 compra vai para a mão certa e fica visível', async () => {
   // A mão visível do J2 tem exatamente as 3 peças: 0-0, 0-1 e 1-2.
   expect(pecasEm('mao-j2').map((p) => p.textContent.trim()).sort()).toEqual(['0-0', '0-1', '1-2']);
 });
+
+// J1 abre com 6-6. O J2 (0-0, 1-2) não tem 6 e o monte está vazio: só pode passar.
+// O jogo não tranca, porque o J1 ainda tem 1-6.
+const PASSAR_MONTE_VAZIO = { j1: '6-6,1-6,3-3', j2: '0-0,1-2', monte: '' };
+
+test('TC-DM-15 passar com o monte vazio', async () => {
+  // PASSAR_MONTE_VAZIO: monte vazio e o J2 sem 6, então passar habilita e comprar não.
+  const user = await abrirJogo(PASSAR_MONTE_VAZIO);
+
+  // J1 joga 6-6 (abertura, sem ponta). Agora é a vez do J2.
+  await jogar(user, '6-6');
+
+  // Antes de passar: mesa com 6-6, vez do J2, monte vazio, 2 peças na mão do J2.
+  // Sem jogada e sem monte: comprar desabilitado, passar habilitado.
+  expect(mesaComoTexto()).toBe('6-6');
+  expect(screen.getByTestId('vez')).toHaveTextContent(/^Jogador 2$/);
+  expect(screen.getByTestId('qtd-monte')).toHaveTextContent(/^0$/);
+  expect(screen.getByTestId('qtd-j2')).toHaveTextContent(/^2$/);
+  expect(screen.getByTestId('btn-comprar')).toBeDisabled();
+  expect(screen.getByTestId('btn-passar')).toBeEnabled();
+
+  // J2 passa a vez.
+  await user.click(screen.getByTestId('btn-passar'));
+
+  // Depois de passar: vez volta para o J1, J2 continua com 2 peças, ninguém venceu.
+  expect(screen.getByTestId('vez')).toHaveTextContent(/^Jogador 1$/);
+  expect(screen.getByTestId('qtd-j2')).toHaveTextContent(/^2$/);
+  expect(screen.getByTestId('mensagem')).not.toHaveTextContent(/venceu/);
+
+  // Mesa continua 6-6 e o J1 ainda tem 2 peças (1-6 e 3-3).
+  expect(mesaComoTexto()).toBe('6-6');
+  expect(screen.getByTestId('qtd-j1')).toHaveTextContent(/^2$/);
+
+  // Vez do J1 com o monte vazio, mas ele tem o 1-6: passar só vale sem jogada (seção 1), então fica desabilitado.
+  expect(screen.getByTestId('btn-passar')).toBeDisabled();
+  expect(screen.getByTestId('btn-comprar')).toBeDisabled();
+
+  // Prova de que não trancou: o J1 ainda joga o 1-6 na direita.
+  await jogar(user, '1-6', 'direita');
+
+  // Depois de jogar 1-6: mesa "6-6 6-1", J1 com 1 peça, vez do J2.
+  expect(mesaComoTexto()).toBe('6-6 6-1');
+  expect(screen.getByTestId('qtd-j1')).toHaveTextContent(/^1$/);
+  expect(screen.getByTestId('vez')).toHaveTextContent(/^Jogador 2$/);
+});
+
+test('TC-DM-16 passar desabilitado com jogada', async () => {
+  // MAOS_PADRAO: J1 abre com 6-6. Depois disso o J2 tem 1-6 e 2-6, que encaixam no 6: passar fica desabilitado.
+  const user = await abrirJogo(MAOS_PADRAO);
+
+  // J1 joga 6-6 (abertura, sem ponta). Agora é a vez do J2.
+  await jogar(user, '6-6');
+
+  // Depois do 6-6: vez do J2, monte com 14 peças, 7 peças na mão dele.
+  expect(screen.getByTestId('vez')).toHaveTextContent(/^Jogador 2$/);
+  expect(screen.getByTestId('qtd-monte')).toHaveTextContent(/^14$/);
+  expect(screen.getByTestId('qtd-j2')).toHaveTextContent(/^7$/);
+
+  // Mão do J2 visível (é a vez dele): 1-6 e 2-6 são as peças que encaixam no 6.
+  expect(within(screen.getByTestId('mao-j2')).getByTestId('peca-1-6')).toHaveTextContent(/^1-6$/);
+  expect(within(screen.getByTestId('mao-j2')).getByTestId('peca-2-6')).toHaveTextContent(/^2-6$/);
+
+  // O J2 tem jogada, então passar está desabilitado (resultado esperado da seção 5).
+  expect(screen.getByTestId('btn-passar')).toBeDisabled();
+
+  // Prova de que a jogada existe: o J2 joga 1-6 na direita (a peça gira para 6-1).
+  await jogar(user, '1-6', 'direita');
+
+  // Depois de jogar 1-6 na direita: mesa "6-6 6-1" e vez volta para o J1.
+  expect(mesaComoTexto()).toBe('6-6 6-1');
+  expect(screen.getByTestId('vez')).toHaveTextContent(/^Jogador 1$/);
+});
+
+// J1 abre com 6-6 (maior carroça) e tem 3-6. O J2 (0-0) não tem 6 e compra a última peça do monte (1-2), que também não encaixa.
+// O monte acaba, mas o jogo não tranca: o J1 ainda tem 3-6.
+const ULTIMA_DO_MONTE = { j1: '6-6,3-6', j2: '0-0', monte: '1-2' };
+
+test('TC-DM-24 monte acaba durante a compra', async () => {
+  // ULTIMA_DO_MONTE: monte com 1 peça e o J2 sem jogada; ao comprar, o monte zera e o jogo segue.
+  const user = await abrirJogo(ULTIMA_DO_MONTE);
+
+  // J1 joga 6-6 (abertura, sem ponta). Agora é a vez do J2.
+  await jogar(user, '6-6');
+
+  // Antes da compra: vez do J2, 1 peça no monte, 1 peça na mão do J2.
+  // Sem jogada e com monte: comprar habilitado, passar desabilitado.
+  expect(screen.getByTestId('vez')).toHaveTextContent(/^Jogador 2$/);
+  expect(screen.getByTestId('qtd-monte')).toHaveTextContent(/^1$/);
+  expect(screen.getByTestId('btn-comprar')).toBeEnabled();
+  expect(screen.getByTestId('btn-passar')).toBeDisabled();
+
+  // J2 compra a última peça do monte (1-2).
+  await user.click(screen.getByTestId('btn-comprar'));
+
+  // Depois da compra: monte zerado, J2 com 2 peças (0-0 e 1-2), 1-2 visível na mão dele.
+  expect(screen.getByTestId('qtd-monte')).toHaveTextContent(/^0$/);
+  expect(screen.getByTestId('qtd-j2')).toHaveTextContent(/^2$/);
+  expect(within(screen.getByTestId('mao-j2')).getByTestId('peca-1-2')).toHaveTextContent(/^1-2$/);
+
+  // Monte vazio e o J2 sem jogada: comprar desabilitado, passar habilitado.
+  expect(screen.getByTestId('btn-comprar')).toBeDisabled();
+  expect(screen.getByTestId('btn-passar')).toBeEnabled();
+
+  // Vez continua com o J2 e a mesa segue só com 6-6.
+  expect(screen.getByTestId('vez')).toHaveTextContent(/^Jogador 2$/);
+  expect(mesaComoTexto()).toBe('6-6');
+
+  // Não trancou: sem mensagem de fim (seção 5).
+  expect(screen.getByTestId('mensagem').textContent.trim()).toBe('');
+
+  // Prova de que não trancou: J2 passa a vez e o J1 ainda joga o 3-6 na direita.
+  await user.click(screen.getByTestId('btn-passar'));
+  expect(screen.getByTestId('vez')).toHaveTextContent(/^Jogador 1$/);
+  await jogar(user, '3-6', 'direita');
+
+  // Depois de jogar 3-6 na direita: mesa "6-6 6-3" e J1 com 0 peças.
+  expect(mesaComoTexto()).toBe('6-6 6-3');
+  expect(screen.getByTestId('qtd-j1')).toHaveTextContent(/^0$/);
+});
