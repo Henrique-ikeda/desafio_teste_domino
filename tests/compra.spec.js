@@ -186,3 +186,50 @@ test('TC-DM-16 passar desabilitado com jogada', async () => {
   expect(mesaComoTexto()).toBe('6-6 6-1');
   expect(screen.getByTestId('vez')).toHaveTextContent(/^Jogador 1$/);
 });
+
+// J1 abre com 6-6 (maior carroça) e tem 3-6. O J2 (0-0) não tem 6 e compra a última peça do monte (1-2), que também não encaixa.
+// O monte acaba, mas o jogo não tranca: o J1 ainda tem 3-6.
+const ULTIMA_DO_MONTE = { j1: '6-6,3-6', j2: '0-0', monte: '1-2' };
+
+test('TC-DM-24 monte acaba durante a compra', async () => {
+  // ULTIMA_DO_MONTE: monte com 1 peça e o J2 sem jogada; ao comprar, o monte zera e o jogo segue.
+  const user = await abrirJogo(ULTIMA_DO_MONTE);
+
+  // J1 joga 6-6 (abertura, sem ponta). Agora é a vez do J2.
+  await jogar(user, '6-6');
+
+  // Antes da compra: vez do J2, 1 peça no monte, 1 peça na mão do J2.
+  // Sem jogada e com monte: comprar habilitado, passar desabilitado.
+  expect(screen.getByTestId('vez')).toHaveTextContent(/^Jogador 2$/);
+  expect(screen.getByTestId('qtd-monte')).toHaveTextContent(/^1$/);
+  expect(screen.getByTestId('btn-comprar')).toBeEnabled();
+  expect(screen.getByTestId('btn-passar')).toBeDisabled();
+
+  // J2 compra a última peça do monte (1-2).
+  await user.click(screen.getByTestId('btn-comprar'));
+
+  // Depois da compra: monte zerado, J2 com 2 peças (0-0 e 1-2), 1-2 visível na mão dele.
+  expect(screen.getByTestId('qtd-monte')).toHaveTextContent(/^0$/);
+  expect(screen.getByTestId('qtd-j2')).toHaveTextContent(/^2$/);
+  expect(within(screen.getByTestId('mao-j2')).getByTestId('peca-1-2')).toHaveTextContent(/^1-2$/);
+
+  // Monte vazio e o J2 sem jogada: comprar desabilitado, passar habilitado.
+  expect(screen.getByTestId('btn-comprar')).toBeDisabled();
+  expect(screen.getByTestId('btn-passar')).toBeEnabled();
+
+  // Vez continua com o J2 e a mesa segue só com 6-6.
+  expect(screen.getByTestId('vez')).toHaveTextContent(/^Jogador 2$/);
+  expect(mesaComoTexto()).toBe('6-6');
+
+  // Não trancou: sem mensagem de fim (seção 5).
+  expect(screen.getByTestId('mensagem').textContent.trim()).toBe('');
+
+  // Prova de que não trancou: J2 passa a vez e o J1 ainda joga o 3-6 na direita.
+  await user.click(screen.getByTestId('btn-passar'));
+  expect(screen.getByTestId('vez')).toHaveTextContent(/^Jogador 1$/);
+  await jogar(user, '3-6', 'direita');
+
+  // Depois de jogar 3-6 na direita: mesa "6-6 6-3" e J1 com 0 peças.
+  expect(mesaComoTexto()).toBe('6-6 6-3');
+  expect(screen.getByTestId('qtd-j1')).toHaveTextContent(/^0$/);
+});
