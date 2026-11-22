@@ -1,6 +1,6 @@
 // Tarefas F4 e F5 (Felipe): bater, jogo trancado, fim de jogo e nova partida. Só pela interface (seção 3 do PLANEJAMENTO.md):
 // abrirJogo, data-testid e user-event. Sem jest.mock e sem importar js/*.js.
-import { abrirJogo, jogar, mesaComoTexto, pecasEm, screen, within } from './helpers.js';
+import { abrirJogo, J1_PADRAO, jogar, MAOS_PADRAO, mesaComoTexto, pecasEm, screen, within } from './helpers.js';
 
 // O J1 só tem o 6-6 e abre com ele: bate na hora. Ao mesmo tempo o J2 (0-0, 1-2) não encaixa no 6 e o monte
 // está vazio, ou seja, o jogo também estaria trancado. A batida vale primeiro: a mensagem é a de vitória, não a de trancado.
@@ -257,4 +257,58 @@ test('TC-DM-21 nada funciona após o fim', async () => {
   expect(mesaComoTexto()).toBe('6-6 6-1');
   expect(screen.getByTestId('btn-comprar')).toBeDisabled();
   expect(screen.getByTestId('btn-passar')).toBeDisabled();
+});
+
+// MAOS_PADRAO (seção 3): J1 = J1_PADRAO (7 peças, começa com 6-6), J2 = J2_PADRAO, monte = MONTE_PADRAO (14 peças).
+test('TC-DM-22 nova partida', async () => {
+  // MAOS_PADRAO: distribuição fixa. Abertura: o J1 clica no 6-6.
+  const user = await abrirJogo(MAOS_PADRAO);
+  await jogar(user, '6-6');
+
+  // O J2 joga 1-6 na ponta direita, então a partida andou: mesa 6-6 6-1, contagens 6 e 6, e é a vez do J1.
+  await jogar(user, '1-6', 'direita');
+
+  // Antes da nova partida: prova de que a partida andou.
+  expect(mesaComoTexto()).toBe('6-6 6-1');
+  expect(screen.getByTestId('qtd-j1')).toHaveTextContent(/^6$/);
+  expect(screen.getByTestId('qtd-j2')).toHaveTextContent(/^6$/);
+  expect(screen.getByTestId('vez')).toHaveTextContent(/^Jogador 1$/);
+
+  // Clica em "nova partida": o jogo volta à distribuição inicial.
+  await user.click(screen.getByTestId('btn-nova-partida'));
+
+  // Mesa zerada: nenhuma peça na mesa e as duas pontas vazias.
+  expect(pecasEm('mesa')).toHaveLength(0);
+  expect(screen.getByTestId('ponta-esquerda').textContent.trim()).toBe('');
+  expect(screen.getByTestId('ponta-direita').textContent.trim()).toBe('');
+
+  // Contagens da partida nova: 7 na mão de cada jogador, 14 no monte, e é a vez do J1.
+  expect(screen.getByTestId('qtd-j1')).toHaveTextContent(/^7$/);
+  expect(screen.getByTestId('qtd-j2')).toHaveTextContent(/^7$/);
+  expect(screen.getByTestId('qtd-monte')).toHaveTextContent(/^14$/);
+  expect(screen.getByTestId('vez')).toHaveTextContent(/^Jogador 1$/);
+
+  // A mão do J1 é a de J1_PADRAO de novo: mesmos textos e mesmos data-testid, todas visíveis.
+  const maoJ1 = pecasEm('mao-j1');
+  expect(maoJ1.map((p) => p.textContent.trim()).sort()).toEqual(J1_PADRAO.split(',').sort());
+  expect(maoJ1.map((p) => p.getAttribute('data-testid')).sort()).toEqual(
+    J1_PADRAO.split(',').map((ab) => `peca-${ab}`).sort(),
+  );
+  maoJ1.forEach((p) => expect(p).not.toHaveAttribute('data-oculta', 'true'));
+
+  // A mão do J2 tem 7 peças, todas viradas (data-oculta="true") e sem texto.
+  const maoJ2 = pecasEm('mao-j2');
+  expect(maoJ2).toHaveLength(7);
+  maoJ2.forEach((p) => {
+    expect(p).toHaveAttribute('data-oculta', 'true');
+    expect(p.textContent.trim()).toBe('');
+  });
+
+  // Sem mensagem: a partida nova começou sem vencedor nem trancamento.
+  expect(screen.getByTestId('mensagem').textContent.trim()).toBe('');
+
+  // O J1 consegue abrir de novo: joga o 6-6 na mesa vazia e passa a vez para o J2.
+  await jogar(user, '6-6');
+  expect(mesaComoTexto()).toBe('6-6');
+  expect(screen.getByTestId('vez')).toHaveTextContent(/^Jogador 2$/);
 });
