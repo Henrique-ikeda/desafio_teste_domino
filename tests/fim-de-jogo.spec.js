@@ -386,3 +386,90 @@ test('TC-DM-28 nova partida depois do fim reabre o jogo', async () => {
   expect(screen.getByTestId('vez')).toHaveTextContent(/^Jogador 2$/);
   expect(screen.getByTestId('qtd-j1')).toHaveTextContent(/^1$/);
 });
+
+// TC-DM-29 (seção 5): sem parâmetros, a distribuição é sorteada. Não dá para saber de antemão quem começa nem quais peças
+// saíram, então o teste lê a mão visível de quem está na vez, joga a peça obrigatória da abertura (seção 1) e confere a
+// nova partida só com o que vale para qualquer sorteio.
+
+// Lê as peças de um lugar como [a, b], a partir do data-testid peca-A-B.
+function pecasComValores(lugar) {
+  return pecasEm(lugar).map((p) => {
+    const m = p.getAttribute('data-testid').match(/^peca-(\d)-(\d)$/);
+    return [Number(m[1]), Number(m[2])];
+  });
+}
+
+// Peça obrigatória da abertura (seção 1): a maior carroça da mão; sem carroça, as peças de maior soma (pode haver empate).
+function candidatasDaAbertura(mao) {
+  const carrocas = mao.filter(([a, b]) => a === b);
+  if (carrocas.length > 0) {
+    const maior = Math.max(...carrocas.map(([a]) => a));
+    return [[maior, maior]];
+  }
+  const maiorSoma = Math.max(...mao.map(([a, b]) => a + b));
+  return mao.filter(([a, b]) => a + b === maiorSoma);
+}
+
+test('TC-DM-29 nova partida sem parâmetros', async () => {
+  // Sem parâmetros: distribuição sorteada. Só conferimos o que vale para qualquer sorteio.
+  const user = await abrirJogo();
+
+  // Quem está na vez é quem começa, então a peça obrigatória está na mão visível dele.
+  expect(screen.getByTestId('vez')).toHaveTextContent(/^Jogador [12]$/);
+  const quemComeca = screen.getByTestId('vez').textContent.trim();
+  const maoVisivel = quemComeca === 'Jogador 1' ? 'mao-j1' : 'mao-j2';
+  const contadorDeQuemComeca = quemComeca === 'Jogador 1' ? 'qtd-j1' : 'qtd-j2';
+
+  // Tenta cada candidata da abertura até uma ir para a mesa. Uma candidata inválida não muda nada, então a próxima é tentada.
+  for (const [a, b] of candidatasDaAbertura(pecasComValores(maoVisivel))) {
+    await user.click(screen.getByTestId(`peca-${a}-${b}`));
+    if (pecasEm('mesa').length === 1) break;
+  }
+
+  // Prova de que a partida andou: a abertura foi para a mesa e quem começou ficou com 6 peças.
+  expect(pecasEm('mesa')).toHaveLength(1);
+  expect(screen.getByTestId(contadorDeQuemComeca)).toHaveTextContent(/^6$/);
+
+  // Clica em "nova partida".
+  await user.click(screen.getByTestId('btn-nova-partida'));
+
+  // Contagens da partida nova: 7 na mão de cada jogador e 14 no monte.
+  expect(screen.getByTestId('qtd-j1')).toHaveTextContent(/^7$/);
+  expect(screen.getByTestId('qtd-j2')).toHaveTextContent(/^7$/);
+  expect(screen.getByTestId('qtd-monte')).toHaveTextContent(/^14$/);
+
+  // Mesa zerada e mensagem vazia.
+  expect(pecasEm('mesa')).toHaveLength(0);
+  expect(screen.getByTestId('mensagem').textContent.trim()).toBe('');
+
+  // A nova partida sorteia quem começa, então a mão visível é a de quem está na vez agora (sem dizer quem é).
+  expect(screen.getByTestId('vez')).toHaveTextContent(/^Jogador [12]$/);
+  const novaVez = screen.getByTestId('vez').textContent.trim();
+  const novaVisivel = novaVez === 'Jogador 1' ? 'mao-j1' : 'mao-j2';
+  const novaOculta = novaVez === 'Jogador 1' ? 'mao-j2' : 'mao-j1';
+
+  // Mão de quem está na vez: 7 peças visíveis, com os números na tela.
+  const visiveis = pecasEm(novaVisivel);
+  expect(visiveis).toHaveLength(7);
+  visiveis.forEach((p) => {
+    expect(p).not.toHaveAttribute('data-oculta', 'true');
+    expect(p.textContent.trim()).toMatch(/^[0-6]-[0-6]$/);
+  });
+
+  // Mão do outro jogador: 7 peças viradas (data-oculta="true") e sem texto.
+  const ocultas = pecasEm(novaOculta);
+  expect(ocultas).toHaveLength(7);
+  ocultas.forEach((p) => {
+    expect(p).toHaveAttribute('data-oculta', 'true');
+    expect(p.textContent.trim()).toBe('');
+  });
+
+  // As 14 peças das duas mãos: data-testid válidos (A ≤ B) e todas diferentes.
+  const ids = [...visiveis, ...ocultas].map((p) => p.getAttribute('data-testid'));
+  for (const id of ids) {
+    const m = id.match(/^peca-([0-6])-([0-6])$/);
+    expect(m).not.toBeNull();
+    expect(Number(m[1])).toBeLessThanOrEqual(Number(m[2]));
+  }
+  expect(new Set(ids).size).toBe(14);
+});
