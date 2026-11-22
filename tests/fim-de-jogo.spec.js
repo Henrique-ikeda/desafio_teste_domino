@@ -1,6 +1,6 @@
 // Tarefas F4 e F5 (Felipe): bater, jogo trancado, fim de jogo e nova partida. Só pela interface (seção 3 do PLANEJAMENTO.md):
 // abrirJogo, data-testid e user-event. Sem jest.mock e sem importar js/*.js.
-import { abrirJogo, jogar, mesaComoTexto, pecasEm, screen } from './helpers.js';
+import { abrirJogo, jogar, mesaComoTexto, pecasEm, screen, within } from './helpers.js';
 
 // O J1 só tem o 6-6 e abre com ele: bate na hora. Ao mesmo tempo o J2 (0-0, 1-2) não encaixa no 6 e o monte
 // está vazio, ou seja, o jogo também estaria trancado. A batida vale primeiro: a mensagem é a de vitória, não a de trancado.
@@ -217,4 +217,44 @@ test('TC-DM-30 trancado logo depois de uma compra', async () => {
   // Fim de jogo: nada mais pode ser passado nem comprado.
   expect(screen.getByTestId('btn-passar')).toBeDisabled();
   expect(screen.getByTestId('btn-comprar')).toBeDisabled();
+});
+
+test('TC-DM-21 nada funciona após o fim', async () => {
+  // J2_BATE: o J1 tem 6-6 e 0-0, o J2 tem só 1-6. Abertura: o J1 clica no 6-6.
+  const user = await abrirJogo(J2_BATE);
+  await jogar(user, '6-6');
+
+  // O J2 joga 1-6 na ponta direita: encaixa e bate. A partir daqui o jogo acabou.
+  await jogar(user, '1-6', 'direita');
+
+  // Batida: a mensagem é a de vitória do J2, exata.
+  expect(screen.getByTestId('mensagem')).toHaveTextContent(/^Jogador 2 venceu!$/);
+
+  // Depois da batida: os dois botões ficam desabilitados e a mesa tem 6-6 e 6-1.
+  expect(screen.getByTestId('btn-comprar')).toBeDisabled();
+  expect(screen.getByTestId('btn-passar')).toBeDisabled();
+  expect(mesaComoTexto()).toBe('6-6 6-1');
+
+  // O J1 tenta jogar o 0-0 (que não encaixa em nada) e clica na ponta direita. Nada muda.
+  await user.click(screen.getByTestId('peca-0-0'));
+  await user.click(screen.getByTestId('ponta-direita'));
+
+  // A peça 0-0 continua na mão do J1, e o J1 segue com 1 peça.
+  expect(within(screen.getByTestId('mao-j1')).getByTestId('peca-0-0')).toBeInTheDocument();
+  expect(screen.getByTestId('qtd-j1')).toHaveTextContent(/^1$/);
+
+  // A mesa continua 6-6 6-1 e a mensagem continua a de vitória do J2.
+  expect(mesaComoTexto()).toBe('6-6 6-1');
+  expect(screen.getByTestId('mensagem')).toHaveTextContent(/^Jogador 2 venceu!$/);
+
+  // Tenta comprar e passar depois do fim. Os botões estão desabilitados, então o clique não faz nada.
+  await user.click(screen.getByTestId('btn-comprar'));
+  await user.click(screen.getByTestId('btn-passar'));
+
+  // O monte segue vazio, a mensagem segue a de vitória do J2, a mesa segue igual e os botões seguem desabilitados.
+  expect(screen.getByTestId('qtd-monte')).toHaveTextContent(/^0$/);
+  expect(screen.getByTestId('mensagem')).toHaveTextContent(/^Jogador 2 venceu!$/);
+  expect(mesaComoTexto()).toBe('6-6 6-1');
+  expect(screen.getByTestId('btn-comprar')).toBeDisabled();
+  expect(screen.getByTestId('btn-passar')).toBeDisabled();
 });
