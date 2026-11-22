@@ -20,7 +20,7 @@ Regras completas, contrato da tela e divisão das tarefas: [PLANEJAMENTO.md](PLA
 | Nome | RA | GitHub | Parte no trabalho |
 |---|---|---|---|
 | Henrique Kendi Ikeda | 24039456-2 | [Henrique-ikeda](https://github.com/Henrique-ikeda) | Tarefas A1–A5: estrutura do projeto e 16 casos de teste: 01–12 e 31–34 (distribuição, quem começa e jogadas na mesa) |
-| Felipe Galeti Gôngora | 24036480-2 | [FGaleti](https://github.com/FGaleti) | Tarefas F1–F5: CI, README e 18 casos de teste: 13–24 e os adicionais 25–30 (compra, passar, bater, jogo trancado e nova partida) |
+| Felipe Galeti Gôngora | 24036480-2 | [FGaleti](https://github.com/FGaleti) | Tarefas F1–F5: CI, README e 37 casos de teste: 13–24, os adicionais 25–30 e as lacunas de cobertura 35–53 (compra, passar, bater, jogo trancado, nova partida e simetrias entre os dois jogadores) |
 
 As contribuições de cada um aparecem em **Insights → Contributors** e nos commits.
 
@@ -51,7 +51,7 @@ npx jest tests/<arquivo>.spec.js -t "TC-DM-NN"   # um caso só
 - **Integração contínua:** o GitHub Actions ([`.github/workflows/testes.yml`](.github/workflows/testes.yml)) roda `npm ci` e `npm run verificar` em todo push e Pull Request, numa matriz Node 18, 20 e 22 × Ubuntu e Windows. A saída do verificador e o relatório JSON do Jest ficam como artefatos de cada execução. O `npm run verificar:completo` (todo TC do plano tem teste) roda manualmente ou em PR com o rótulo `entrega`.
 - **Validação dos testes:** falhar pelo motivo certo não prova que o teste está certo. Cada integrante rodou os seus testes contra uma implementação de referência temporária (fora do repositório) e contra defeitos plantados: [validação do Henrique](docs/VALIDACAO-TESTES-HENRIQUE.md) e [validação do Felipe](docs/VALIDACAO-TESTES-FELIPE.md).
 
-## Casos de teste (34)
+## Casos de teste (53)
 
 | ID | Cenário | Arquivo | Resultado esperado | Autor |
 |---|---|---|---|---|
@@ -67,6 +67,10 @@ npx jest tests/<arquivo>.spec.js -t "TC-DM-NN"   # um caso só
 | TC-DM-10 | Ponta errada, depois a certa | `tests/jogadas.spec.js` | Na esquerda: inválida, `mesa` = "6-6 6-1". Na direita: `mesa` = "6-6 6-1 1-3"; `ponta-direita` = 3 | Henrique |
 | TC-DM-11 | Mão escondida não joga | `tests/jogadas.spec.js` | `peca-1-6` continua em `mao-j2` com `data-oculta` = `true`; `mesa` vazia; `vez` = "Jogador 1" | Henrique |
 | TC-DM-12 | Contadores durante a partida | `tests/inicio.spec.js` | `qtd-j1` = 5; `qtd-j2` = 6; `qtd-monte` = 14; `mesa` com 3 peças | Henrique |
+| TC-DM-31 | Carroça vence a soma em quem começa | `tests/inicio.spec.js` | `vez` = "Jogador 2" (1-1 é a única carroça, mesmo somando menos que 5-6); `mao-j2` mostra as peças e `mao-j1` fica escondida | Henrique |
+| TC-DM-32 | Abertura obrigatória sem carroça | `tests/inicio.spec.js` | Depois do 0-1: `mesa` vazia, `mensagem` contém "inválida", `qtd-j1` = 2, `vez` = "Jogador 1". Depois do 5-6: `peca-5-6` dentro da `mesa`, `qtd-j1` = 1, `vez` = "Jogador 2" | Henrique |
+| TC-DM-33 | Peça gira na ponta esquerda | `tests/jogadas.spec.js` | Depois do J2: `mesa` = "1-6 6-6", `ponta-esquerda` = 1. Depois do J1: `mesa` = "3-1 1-6 6-6" (a peça girou), `ponta-esquerda` = 3, `ponta-direita` = 6 | Henrique |
+| TC-DM-34 | Mão visível troca nos dois sentidos | `tests/jogadas.spec.js` | `vez` = "Jogador 1"; `mao-j2` com 6 peças, todas com `data-oculta` = `true` e sem texto; `mao-j1` mostra as 6 peças restantes de `J1_PADRAO` | Henrique |
 | TC-DM-13 | Comprar só sem jogada | `tests/compra.spec.js` | `btn-comprar` desabilitado nas duas vezes (J1 tinha o 6-6; J2 tem 1-6 e 2-6); `qtd-monte` = 14 | Felipe |
 | TC-DM-14 | Comprar até poder jogar | `tests/compra.spec.js` | 1ª compra: `peca-0-1` na `mao-j2`, `qtd-monte` = 2, `btn-comprar` continua habilitado. 2ª compra: `peca-2-6` na mão, `qtd-monte` = 1, `btn-comprar` desabilitado. Depois: `mesa` = "6-6 6-2", `vez` = "Jogador 1" | Felipe |
 | TC-DM-15 | Passar com o monte vazio | `tests/compra.spec.js` | Antes de passar: `btn-comprar` desabilitado e `btn-passar` habilitado. Depois: `vez` = "Jogador 1"; `qtd-j2` = 2; `mensagem` sem "venceu" | Felipe |
@@ -85,10 +89,26 @@ npx jest tests/<arquivo>.spec.js -t "TC-DM-NN"   # um caso só
 | TC-DM-27 | Nada funciona depois de trancar | `tests/fim-de-jogo.spec.js` | `btn-comprar` e `btn-passar` desabilitados; `peca-0-1` continua em `mao-j1`; `qtd-j1` = 1; `mesa` = "6-6"; `mensagem` continua "Jogo trancado! Jogador 1 venceu" | Felipe |
 | TC-DM-28 | Nova partida depois do fim reabre o jogo | `tests/fim-de-jogo.spec.js` | Antes do 6-6: `mesa` sem peças, `qtd-j1` = 2, `qtd-j2` = 1, `qtd-monte` = 0, `vez` = "Jogador 1", `mensagem` vazia. Depois: `mesa` = "6-6" e `vez` = "Jogador 2" | Felipe |
 | TC-DM-29 | Nova partida sem parâmetros | `tests/fim-de-jogo.spec.js` | `qtd-j1` = 7, `qtd-j2` = 7, `qtd-monte` = 14; `mesa` sem peças; `mensagem` vazia; as 14 peças das mãos com `data-testid` válidos e diferentes | Felipe |
-| TC-DM-31 | Carroça vence a soma em quem começa | `tests/inicio.spec.js` | `vez` = "Jogador 2" (1-1 é a única carroça, mesmo somando menos que 5-6); `mao-j2` mostra as peças e `mao-j1` fica escondida | Henrique |
-| TC-DM-32 | Abertura obrigatória sem carroça | `tests/inicio.spec.js` | Depois do 0-1: `mesa` vazia, `mensagem` contém "inválida", `qtd-j1` = 2, `vez` = "Jogador 1". Depois do 5-6: `peca-5-6` dentro da `mesa`, `qtd-j1` = 1, `vez` = "Jogador 2" | Henrique |
-| TC-DM-33 | Peça gira na ponta esquerda | `tests/jogadas.spec.js` | Depois do J2: `mesa` = "1-6 6-6", `ponta-esquerda` = 1. Depois do J1: `mesa` = "3-1 1-6 6-6" (a peça girou), `ponta-esquerda` = 3, `ponta-direita` = 6 | Henrique |
-| TC-DM-34 | Mão visível troca nos dois sentidos | `tests/jogadas.spec.js` | `vez` = "Jogador 1"; `mao-j2` com 6 peças, todas com `data-oculta` = `true` e sem texto; `mao-j1` mostra as 6 peças restantes de `J1_PADRAO` | Henrique |
+| TC-DM-35 | O J2 também só abre com a peça obrigatória | `tests/lacunas-felipe.spec.js` | Depois do 5-6: `mesa` vazia, `mensagem` contém "inválida", `qtd-j2` = 2, `vez` = "Jogador 2". Depois do 6-6: `mesa` = "6-6", `qtd-j2` = 1, `vez` = "Jogador 1" | Felipe |
+| TC-DM-36 | Mão escondida não joga no meio da partida, nos dois sentidos | `tests/lacunas-felipe.spec.js` | Depois do 1º clique: `mesa` = "6-6", `peca-4-6` continua em `mao-j1` com `data-oculta` = `true`, `qtd-j1` = 6, `vez` = "Jogador 2". Depois do 1-6 e do 2º clique: `mesa` = "6-6 6-1", `peca-2-6` continua em `mao-j2` com `data-oculta` = `true`, `qtd-j2` = 6, `vez` = "Jogador 1" | Felipe |
+| TC-DM-37 | Peça clicada fica com data-selecionada | `tests/lacunas-felipe.spec.js` | `peca-1-6` com `data-selecionada` = `true`; `peca-2-6` sem; `mesa` = "6-6"; `vez` = "Jogador 2" | Felipe |
+| TC-DM-38 | O J1 também compra do monte | `tests/lacunas-felipe.spec.js` | Antes: `btn-comprar` habilitado e `btn-passar` desabilitado. Depois: `peca-2-5` em `mao-j1` com o texto "2-5" (visível), `qtd-j1` = 2, `qtd-j2` = 1, `qtd-monte` = 0, `vez` = "Jogador 1", `btn-comprar` desabilitado e `btn-passar` habilitado | Felipe |
+| TC-DM-39 | O J1 também passa a vez | `tests/lacunas-felipe.spec.js` | Antes: `btn-comprar` desabilitado e `btn-passar` habilitado. Depois: `vez` = "Jogador 2"; `mesa` = "6-6 6-1"; `qtd-j1` = 1; `mensagem` sem "venceu" nem "trancado" | Felipe |
+| TC-DM-40 | Peça que encaixa numa ponta só já é jogada | `tests/lacunas-felipe.spec.js` | Vez do J1 (o 4-6 só encaixa na esquerda): `btn-comprar` e `btn-passar` desabilitados. Depois do 4-6: `mesa` = "4-6 6-6 6-1". Vez do J2 (o 0-1 só encaixa na direita): `btn-comprar` e `btn-passar` desabilitados | Felipe |
+| TC-DM-41 | Trancado com diferença de 1 ponto | `tests/lacunas-felipe.spec.js` | 1º: "Jogo trancado! Jogador 2 venceu"; `pontos-j1` = 5; `pontos-j2` = 4. 2º: "Jogo trancado! Jogador 1 venceu"; `pontos-j1` = 4; `pontos-j2` = 5 | Felipe |
+| TC-DM-42 | Nova partida na vez do J2 devolve a vez ao J1 | `tests/lacunas-felipe.spec.js` | `vez` = "Jogador 1"; `mesa` sem peças; `qtd-j1` = 7, `qtd-j2` = 7, `qtd-monte` = 14; `mensagem` vazia; `mao-j1` visível e `mao-j2` toda com `data-oculta` = `true` | Felipe |
+| TC-DM-43 | Depois do fim, nem a peça que encaixaria é jogada | `tests/lacunas-felipe.spec.js` | `mensagem` continua "Jogador 1 venceu!"; `mesa` = "6-6"; `peca-1-6` continua em `mao-j2`; `qtd-j2` = 2 | Felipe |
+| TC-DM-44 | Nova partida depois de trancar reabre o jogo | `tests/lacunas-felipe.spec.js` | Depois da nova partida: `mesa` sem peças, `qtd-j1` = 2, `qtd-j2` = 2, `qtd-monte` = 0, `vez` = "Jogador 1", `mensagem` vazia, `peca-6-6` em `mao-j1`. Depois do 6-6: `mesa` = "6-6" e "Jogo trancado! Jogador 1 venceu" | Felipe |
+| TC-DM-45 | Abertura recusa outra carroça que não é a maior | `tests/lacunas-felipe.spec.js` | Depois do 5-5: `mesa` vazia, `mensagem` contém "inválida", `qtd-j1` = 3, `vez` = "Jogador 1". Depois do 6-6: `mesa` = "6-6", `qtd-j1` = 2 | Felipe |
+| TC-DM-46 | Sem carroça, o J2 começa pela maior soma; pontas certas | `tests/lacunas-felipe.spec.js` | `vez` = "Jogador 2" no início (5-6 soma 11 contra 10 do 4-6). Depois do 0-1: `mesa` vazia e "inválida". Depois do 5-6: `peca-5-6` dentro da `mesa`, `qtd-j2` = 1, `vez` = "Jogador 1"; as duas pontas são 5 e 6 (em qualquer ordem) | Felipe |
+| TC-DM-47 | Depois de bater, não se compra, mesmo com monte cheio | `tests/lacunas-felipe.spec.js` | `mensagem` = "Jogador 1 venceu!"; `btn-comprar` e `btn-passar` desabilitados; `qtd-monte` = 1; `qtd-j2` = 2; `peca-0-1` não está em `mao-j2` | Felipe |
+| TC-DM-48 | O J1 bate no meio, pela ponta esquerda | `tests/lacunas-felipe.spec.js` | `mesa` = "2-6 6-6 6-1"; `mensagem` = "Jogador 1 venceu!"; `qtd-j1` = 0; `qtd-j2` = 1; `btn-comprar` e `btn-passar` desabilitados | Felipe |
+| TC-DM-49 | Trancado depois da compra do J2, com vitória do J2 | `tests/lacunas-felipe.spec.js` | Antes: `btn-comprar` habilitado. Depois: `qtd-monte` = 0; `qtd-j2` = 2; `mensagem` = "Jogo trancado! Jogador 2 venceu"; `pontos-j1` = 9; `pontos-j2` = 6 | Felipe |
+| TC-DM-50 | Empate no trancado com pontos diferentes de 5 | `tests/lacunas-felipe.spec.js` | `mensagem` = "Jogo trancado! Empate"; `pontos-j1` = 3; `pontos-j2` = 3 | Felipe |
+| TC-DM-51 | Duas compras esvaziam o monte e trancam na última | `tests/lacunas-felipe.spec.js` | Depois da 1ª: `qtd-monte` = 1, `qtd-j2` = 2, `mensagem` sem "trancado", `btn-comprar` habilitado. Depois da 2ª: `qtd-monte` = 0, `qtd-j2` = 3, "Jogo trancado! Jogador 1 venceu", `pontos-j1` = 3, `pontos-j2` = 17 | Felipe |
+| TC-DM-52 | Nova partida devolve o monte na mesma ordem | `tests/lacunas-felipe.spec.js` | 1ª compra: `peca-0-1` em `mao-j2`. Depois da nova partida: `qtd-monte` = 3. 2ª compra: `peca-0-1` em `mao-j2` e `peca-3-4` fora dela, `qtd-monte` = 2, `qtd-j2` = 3 | Felipe |
+| TC-DM-53 | Nova partida devolve a vez a quem começa, também o J2 | `tests/lacunas-felipe.spec.js` | `vez` = "Jogador 2" no início e depois da nova partida; `mesa` sem peças; `qtd-j1` = 2, `qtd-j2` = 2; `mensagem` vazia; `mao-j2` visível e `mao-j1` toda com `data-oculta` = `true`. Depois do 5-5: `mesa` = "5-5" e `vez` = "Jogador 1" | Felipe |
+
 
 ## Estrutura
 
