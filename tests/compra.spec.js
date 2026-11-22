@@ -147,6 +147,10 @@ test('TC-DM-15 passar com o monte vazio', async () => {
   expect(mesaComoTexto()).toBe('6-6');
   expect(screen.getByTestId('qtd-j1')).toHaveTextContent(/^2$/);
 
+  // Vez do J1 com o monte vazio, mas ele tem o 1-6: passar só vale sem jogada (seção 1), então fica desabilitado.
+  expect(screen.getByTestId('btn-passar')).toBeDisabled();
+  expect(screen.getByTestId('btn-comprar')).toBeDisabled();
+
   // Prova de que não trancou: o J1 ainda joga o 1-6 na direita.
   await jogar(user, '1-6', 'direita');
 
