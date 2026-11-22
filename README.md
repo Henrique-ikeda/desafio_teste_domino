@@ -51,7 +51,7 @@ npx jest tests/<arquivo>.spec.js -t "TC-DM-NN"   # um caso só
 - **Integração contínua:** o GitHub Actions ([`.github/workflows/testes.yml`](.github/workflows/testes.yml)) roda `npm ci` e `npm run verificar` em todo push e Pull Request, numa matriz Node 18, 20 e 22 × Ubuntu e Windows. A saída do verificador e o relatório JSON do Jest ficam como artefatos de cada execução. O `npm run verificar:completo` (todo TC do plano tem teste) roda manualmente ou em PR com o rótulo `entrega`.
 - **Validação dos testes:** falhar pelo motivo certo não prova que o teste está certo. Cada integrante rodou os seus testes contra uma implementação de referência temporária (fora do repositório) e contra defeitos plantados: [validação do Henrique](docs/VALIDACAO-TESTES-HENRIQUE.md) e [validação do Felipe](docs/VALIDACAO-TESTES-FELIPE.md).
 
-## Casos de teste (28)
+## Casos de teste (31)
 
 | ID | Cenário | Arquivo | Resultado esperado | Autor |
 |---|---|---|---|---|
@@ -79,6 +79,9 @@ npx jest tests/<arquivo>.spec.js -t "TC-DM-NN"   # um caso só
 | TC-DM-22 | Nova partida | `tests/fim-de-jogo.spec.js` | `mesa` sem peças; `qtd-j1` = 7, `qtd-j2` = 7, `qtd-monte` = 14; `vez` = "Jogador 1"; `mao-j1` com as peças de `J1_PADRAO`; `mensagem` vazia | Felipe |
 | TC-DM-23 | Compra vai para a mão certa e fica visível | `tests/compra.spec.js` | `peca-0-1` dentro de `mao-j2`, com o texto "0-1" (mão visível, é a vez dele); `qtd-j2` = 3; `peca-0-1` não está em `mao-j1` | Felipe |
 | TC-DM-24 | Monte acaba durante a compra | `tests/compra.spec.js` | `qtd-monte` = 0; `btn-comprar` desabilitado; `btn-passar` habilitado; o jogo **não** trancou (o J1 ainda pode jogar 3-6): `mensagem` vazia | Felipe |
+| TC-DM-25 | Trancado com vitória do Jogador 2 | `tests/fim-de-jogo.spec.js` | `mensagem` = "Jogo trancado! Jogador 2 venceu"; `pontos-j1` = 9; `pontos-j2` = 1 | Felipe |
+| TC-DM-26 | Trancado depois de um passe | `tests/fim-de-jogo.spec.js` | Depois do passe: `mensagem` vazia, `vez` = "Jogador 1". Depois do 3-6: `mesa` = "6-6 6-3"; nenhum dos dois encaixa (J1: 1-2; J2: 0-0; pontas 6 e 3) → `mensagem` = "Jogo trancado! Jogador 2 venceu"; `pontos-j1` = 3; `pontos-j2` = 0 | Felipe |
+| TC-DM-30 | Trancado logo depois de uma compra | `tests/fim-de-jogo.spec.js` | `qtd-monte` = 0; `qtd-j2` = 2; `mensagem` = "Jogo trancado! Jogador 1 venceu" sem o J2 precisar passar; `pontos-j1` = 1; `pontos-j2` = 14 | Felipe |
 | TC-DM-31 | Carroça vence a soma em quem começa | `tests/inicio.spec.js` | `vez` = "Jogador 2" (1-1 é a única carroça, mesmo somando menos que 5-6); `mao-j2` mostra as peças e `mao-j1` fica escondida | Henrique |
 | TC-DM-32 | Abertura obrigatória sem carroça | `tests/inicio.spec.js` | Depois do 0-1: `mesa` vazia, `mensagem` contém "inválida", `qtd-j1` = 2, `vez` = "Jogador 1". Depois do 5-6: `peca-5-6` dentro da `mesa`, `qtd-j1` = 1, `vez` = "Jogador 2" | Henrique |
 | TC-DM-33 | Peça gira na ponta esquerda | `tests/jogadas.spec.js` | Depois do J2: `mesa` = "1-6 6-6", `ponta-esquerda` = 1. Depois do J1: `mesa` = "3-1 1-6 6-6" (a peça girou), `ponta-esquerda` = 3, `ponta-direita` = 6 | Henrique |
