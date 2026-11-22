@@ -183,7 +183,7 @@ Cada integrante é **dono de arquivos de teste diferentes** (coluna "Arquivos").
 | **F2** Comprar do monte | `felipe/f2-comprar` | tests/compra.spec.js | 13, 14, 23 |
 | **F3** Passar a vez | `felipe/f3-passar` | tests/compra.spec.js | 15, 16, 24 |
 | **F4** Bater e jogo trancado | `felipe/f4-fim` | tests/fim-de-jogo.spec.js | 17, 18, 19, 20, 25, 26, 30 |
-| **F5** Fim bloqueia e nova partida | `felipe/f5-nova-partida` | tests/fim-de-jogo.spec.js | 21, 22 |
+| **F5** Fim bloqueia e nova partida | `felipe/f5-nova-partida` | tests/fim-de-jogo.spec.js | 21, 22, 27, 28, 29 |
 
 ### IDs para casos de teste adicionais
 
@@ -233,6 +233,9 @@ Para os dois não criarem o mesmo ID: **TC-DM-25 a TC-DM-30** ficam reservados p
 | TC-DM-25 | Trancado com vitória do Jogador 2 | `?j1=6-6,4-5&j2=0-1&monte=`. J1 joga 6-6 | `mensagem` = "Jogo trancado! Jogador 2 venceu"; `pontos-j1` = 9; `pontos-j2` = 1 |
 | TC-DM-26 | Trancado depois de um passe | `?j1=6-6,3-6,1-2&j2=0-0&monte=`. J1 joga 6-6; J2 clica `btn-passar` (o J1 ainda tem 3-6, não tranca); J1 joga 3-6 na direita | Depois do passe: `mensagem` vazia, `vez` = "Jogador 1". Depois do 3-6: `mesa` = "6-6 6-3"; nenhum dos dois encaixa (J1: 1-2; J2: 0-0; pontas 6 e 3) → `mensagem` = "Jogo trancado! Jogador 2 venceu"; `pontos-j1` = 3; `pontos-j2` = 0 |
 | TC-DM-30 | Trancado logo depois de uma compra | `?j1=6-6,0-1&j2=2-3&monte=4-5`. J1 joga 6-6; J2 compra uma vez (4-5 não encaixa e o monte acaba; o J1 também não tem 6) | `qtd-monte` = 0; `qtd-j2` = 2; `mensagem` = "Jogo trancado! Jogador 1 venceu" sem o J2 precisar passar; `pontos-j1` = 1; `pontos-j2` = 14 |
+| TC-DM-27 | Nada funciona depois de trancar | Cenário do TC-DM-19 (`?j1=6-6,0-1&j2=2-3,4-5&monte=`): J1 joga 6-6 e o jogo tranca; clicar `peca-0-1` e depois `ponta-direita`; clicar `btn-comprar` e `btn-passar` | `btn-comprar` e `btn-passar` desabilitados; `peca-0-1` continua em `mao-j1`; `qtd-j1` = 1; `mesa` = "6-6"; `mensagem` continua "Jogo trancado! Jogador 1 venceu" |
+| TC-DM-28 | Nova partida depois do fim reabre o jogo | Cenário do TC-DM-18 (`?j1=6-6,0-0&j2=1-6&monte=`): J1 joga 6-6; J2 joga 1-6 na direita e bate; clicar `btn-nova-partida`; J1 joga 6-6 | Antes do 6-6: `mesa` sem peças, `qtd-j1` = 2, `qtd-j2` = 1, `qtd-monte` = 0, `vez` = "Jogador 1", `mensagem` vazia. Depois: `mesa` = "6-6" e `vez` = "Jogador 2" |
+| TC-DM-29 | Nova partida sem parâmetros | Sem parâmetros. Jogar a peça obrigatória da vez (lida na mão visível: a maior carroça ou, sem carroça, a maior soma); clicar `btn-nova-partida` | `qtd-j1` = 7, `qtd-j2` = 7, `qtd-monte` = 14; `mesa` sem peças; `mensagem` vazia; as 14 peças das mãos com `data-testid` válidos e diferentes |
 
 ## 6. Fluxo de trabalho no Git
 
