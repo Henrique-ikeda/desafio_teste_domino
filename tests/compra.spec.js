@@ -155,3 +155,30 @@ test('TC-DM-15 passar com o monte vazio', async () => {
   expect(screen.getByTestId('qtd-j1')).toHaveTextContent(/^1$/);
   expect(screen.getByTestId('vez')).toHaveTextContent(/^Jogador 2$/);
 });
+
+test('TC-DM-16 passar desabilitado com jogada', async () => {
+  // MAOS_PADRAO: J1 abre com 6-6. Depois disso o J2 tem 1-6 e 2-6, que encaixam no 6: passar fica desabilitado.
+  const user = await abrirJogo(MAOS_PADRAO);
+
+  // J1 joga 6-6 (abertura, sem ponta). Agora é a vez do J2.
+  await jogar(user, '6-6');
+
+  // Depois do 6-6: vez do J2, monte com 14 peças, 7 peças na mão dele.
+  expect(screen.getByTestId('vez')).toHaveTextContent(/^Jogador 2$/);
+  expect(screen.getByTestId('qtd-monte')).toHaveTextContent(/^14$/);
+  expect(screen.getByTestId('qtd-j2')).toHaveTextContent(/^7$/);
+
+  // Mão do J2 visível (é a vez dele): 1-6 e 2-6 são as peças que encaixam no 6.
+  expect(within(screen.getByTestId('mao-j2')).getByTestId('peca-1-6')).toHaveTextContent(/^1-6$/);
+  expect(within(screen.getByTestId('mao-j2')).getByTestId('peca-2-6')).toHaveTextContent(/^2-6$/);
+
+  // O J2 tem jogada, então passar está desabilitado (resultado esperado da seção 5).
+  expect(screen.getByTestId('btn-passar')).toBeDisabled();
+
+  // Prova de que a jogada existe: o J2 joga 1-6 na direita (a peça gira para 6-1).
+  await jogar(user, '1-6', 'direita');
+
+  // Depois de jogar 1-6 na direita: mesa "6-6 6-1" e vez volta para o J1.
+  expect(mesaComoTexto()).toBe('6-6 6-1');
+  expect(screen.getByTestId('vez')).toHaveTextContent(/^Jogador 1$/);
+});
