@@ -312,3 +312,39 @@ test('TC-DM-22 nova partida', async () => {
   expect(mesaComoTexto()).toBe('6-6');
   expect(screen.getByTestId('vez')).toHaveTextContent(/^Jogador 2$/);
 });
+
+// O cenário é o do TC-DM-19 (TRANCA_J1_VENCE): o J1 joga 6-6 e o jogo tranca. Depois do fim, nada pode ser jogado, comprado ou passado.
+test('TC-DM-27 nada funciona depois de trancar', async () => {
+  // TRANCA_J1_VENCE: o J1 tem 6-6 e 0-1, o J2 tem 2-3 e 4-5, o monte está vazio. Abertura: o J1 clica no 6-6.
+  const user = await abrirJogo(TRANCA_J1_VENCE);
+  await jogar(user, '6-6');
+
+  // Logo depois do 6-6 o jogo tranca: a mensagem é a de vitória do J1 por trancamento, exata.
+  // Os dois botões ficam desabilitados: ninguém tem jogada e o monte está vazio (sem o fim, o passar estaria habilitado).
+  expect(screen.getByTestId('mensagem')).toHaveTextContent(/^Jogo trancado! Jogador 1 venceu$/);
+  expect(screen.getByTestId('btn-comprar')).toBeDisabled();
+  expect(screen.getByTestId('btn-passar')).toBeDisabled();
+
+  // O J1 tenta jogar a peça 0-1 na ponta direita. Nada pode mudar.
+  await user.click(screen.getByTestId('peca-0-1'));
+  await user.click(screen.getByTestId('ponta-direita'));
+
+  // A peça 0-1 continua na mão do J1, o J1 segue com 1 peça, a mesa segue só com o 6-6 e a mensagem é a mesma.
+  expect(within(screen.getByTestId('mao-j1')).getByTestId('peca-0-1')).toBeInTheDocument();
+  expect(screen.getByTestId('qtd-j1')).toHaveTextContent(/^1$/);
+  expect(mesaComoTexto()).toBe('6-6');
+  expect(screen.getByTestId('mensagem')).toHaveTextContent(/^Jogo trancado! Jogador 1 venceu$/);
+
+  // Tenta comprar e passar depois do fim. Os botões estão desabilitados, então o clique não faz nada.
+  await user.click(screen.getByTestId('btn-comprar'));
+  await user.click(screen.getByTestId('btn-passar'));
+
+  // O monte segue vazio, o J2 segue com 2 peças, os pontos seguem os mesmos, a mensagem segue a mesma e os botões seguem desabilitados.
+  expect(screen.getByTestId('qtd-monte')).toHaveTextContent(/^0$/);
+  expect(screen.getByTestId('qtd-j2')).toHaveTextContent(/^2$/);
+  expect(screen.getByTestId('mensagem')).toHaveTextContent(/^Jogo trancado! Jogador 1 venceu$/);
+  expect(screen.getByTestId('pontos-j1')).toHaveTextContent(/^1$/);
+  expect(screen.getByTestId('pontos-j2')).toHaveTextContent(/^14$/);
+  expect(screen.getByTestId('btn-comprar')).toBeDisabled();
+  expect(screen.getByTestId('btn-passar')).toBeDisabled();
+});
