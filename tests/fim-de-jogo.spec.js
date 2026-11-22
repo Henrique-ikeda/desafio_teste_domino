@@ -1,6 +1,6 @@
 // Tarefas F4 e F5 (Felipe): bater, jogo trancado, fim de jogo e nova partida. Só pela interface (seção 3 do PLANEJAMENTO.md):
 // abrirJogo, data-testid e user-event. Sem jest.mock e sem importar js/*.js.
-import { abrirJogo, J1_PADRAO, jogar, MAOS_PADRAO, mesaComoTexto, pecasEm, screen, within } from './helpers.js';
+import { abrirJogo, J1_PADRAO, J2_PADRAO, jogar, MAOS_PADRAO, mesaComoTexto, pecasEm, screen, within } from './helpers.js';
 
 // O J1 só tem o 6-6 e abre com ele: bate na hora. Ao mesmo tempo o J2 (0-0, 1-2) não encaixa no 6 e o monte
 // está vazio, ou seja, o jogo também estaria trancado. A batida vale primeiro: a mensagem é a de vitória, não a de trancado.
@@ -303,6 +303,10 @@ test('TC-DM-22 nova partida', async () => {
     expect(p).toHaveAttribute('data-oculta', 'true');
     expect(p.textContent.trim()).toBe('');
   });
+  // E são as mesmas 7 peças de J2_PADRAO (seção 1: "as mesmas mãos"); o data-testid existe mesmo escondida (seção 3).
+  expect(maoJ2.map((p) => p.getAttribute('data-testid')).sort()).toEqual(
+    J2_PADRAO.split(',').map((ab) => `peca-${ab}`).sort(),
+  );
 
   // Sem mensagem: a partida nova começou sem vencedor nem trancamento.
   expect(screen.getByTestId('mensagem').textContent.trim()).toBe('');
@@ -442,7 +446,7 @@ test('TC-DM-29 nova partida sem parâmetros', async () => {
   expect(pecasEm('mesa')).toHaveLength(0);
   expect(screen.getByTestId('mensagem').textContent.trim()).toBe('');
 
-  // A nova partida sorteia quem começa, então a mão visível é a de quem está na vez agora (sem dizer quem é).
+  // Sem parâmetros não dá para saber quem está na vez: a mão visível é a de quem a `vez` mostrar (sem conferir quem é).
   expect(screen.getByTestId('vez')).toHaveTextContent(/^Jogador [12]$/);
   const novaVez = screen.getByTestId('vez').textContent.trim();
   const novaVisivel = novaVez === 'Jogador 1' ? 'mao-j1' : 'mao-j2';
