@@ -4,7 +4,7 @@ Cada regra da seção 1 do PLANEJAMENTO.md tem pelo menos um caso de teste que o
 
 | # | Regra (seção 1) | TCs |
 |---|---|---|
-| 1 | 7 peças para cada um, 14 no monte (sorteio ou parâmetros) | 01, 02 |
+| 1 | 7 peças para cada um, 14 no monte (sorteio ou parâmetros) | 01, 02, 29 |
 | 2 | Mão de quem não está na vez fica escondida e não joga | 01, 02, 06, 11, 34 |
 | 3 | Começa a maior carroça; sem carroça, a maior soma | 03, 04, 31 |
 | 4 | A abertura é obrigatoriamente essa peça | 05, 32 |
@@ -15,7 +15,7 @@ Cada regra da seção 1 do PLANEJAMENTO.md tem pelo menos um caso de teste que o
 | 9 | Passar só sem jogada e com o monte vazio | 15, 16, 24 |
 | 10 | Bater = vitória (e a batida vale antes do trancado) | 17, 18 |
 | 11 | Jogo trancado: menos pontos vence; pontos iguais = empate | 19, 20, 24, 25, 26, 30 |
-| 12 | Nada funciona depois do fim | 21 |
-| 13 | Nova partida | 22 |
+| 12 | Nada funciona depois do fim (bater ou trancar) | 21, 27, 30 |
+| 13 | Nova partida (com parâmetros, depois do fim e sorteada de novo) | 22, 28, 29 |
 
 **Para que serve:** se alguém fosse implementar o jogo só a partir destes testes, toda regra do jogo teria um teste exigindo que ela exista.
