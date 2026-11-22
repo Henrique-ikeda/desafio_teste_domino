@@ -180,3 +180,42 @@ test('TC-DM-26 trancado depois de um passe', async () => {
   expect(screen.getByTestId('qtd-j1')).toHaveTextContent(/^1$/);
   expect(screen.getByTestId('qtd-j2')).toHaveTextContent(/^1$/);
 });
+
+// O J1 abre com 6-6 e fica com 0-1. O J2 (2-3) não tem 6 e compra a última peça do monte (4-5), que também não encaixa.
+// O monte acaba e o J1 (0-1) também não tem 6: ninguém pode jogar, então tranca na hora, logo depois da COMPRA,
+// sem o J2 precisar passar (o TC-DM-19 tranca depois de uma jogada; o TC-DM-24 é o contrário: o outro ainda joga).
+// Pontos: J1 = 0+1 = 1; J2 = 2+3+4+5 = 14. Vence o J1.
+const TRANCA_DEPOIS_DA_COMPRA = { j1: '6-6,0-1', j2: '2-3', monte: '4-5' };
+
+test('TC-DM-30 trancado logo depois de uma compra', async () => {
+  // TRANCA_DEPOIS_DA_COMPRA: o J1 tem 6-6 e 0-1, o J2 tem 2-3, o monte tem só 4-5. Abertura: o J1 clica no 6-6.
+  const user = await abrirJogo(TRANCA_DEPOIS_DA_COMPRA);
+  await jogar(user, '6-6');
+
+  // Antes da compra: é a vez do J2, o monte tem 1 peça, o botão de comprar está habilitado e a mensagem está vazia.
+  expect(screen.getByTestId('vez')).toHaveTextContent(/^Jogador 2$/);
+  expect(screen.getByTestId('qtd-monte')).toHaveTextContent(/^1$/);
+  expect(screen.getByTestId('btn-comprar')).toBeEnabled();
+  expect(screen.getByTestId('mensagem').textContent.trim()).toBe('');
+
+  // O J2 compra uma vez: pega o 4-5, que não encaixa, e o monte acaba. Ninguém pode jogar: o jogo tranca na hora.
+  await user.click(screen.getByTestId('btn-comprar'));
+
+  // Depois da compra: o monte ficou vazio e o J2 tem 2 peças (2-3 e 4-5).
+  expect(screen.getByTestId('qtd-monte')).toHaveTextContent(/^0$/);
+  expect(screen.getByTestId('qtd-j2')).toHaveTextContent(/^2$/);
+
+  // Trancado sem o J2 passar: a mensagem é a de jogo trancado com vitória do J1, exata.
+  expect(screen.getByTestId('mensagem')).toHaveTextContent(/^Jogo trancado! Jogador 1 venceu$/);
+
+  // Pontos: o J1 soma 1 (0 + 1) e o J2 soma 14 (2 + 3 + 4 + 5). Menos pontos vence.
+  expect(screen.getByTestId('pontos-j1')).toHaveTextContent(/^1$/);
+  expect(screen.getByTestId('pontos-j2')).toHaveTextContent(/^14$/);
+
+  // A mesa tem só a carroça 6-6.
+  expect(mesaComoTexto()).toBe('6-6');
+
+  // Fim de jogo: nada mais pode ser passado nem comprado.
+  expect(screen.getByTestId('btn-passar')).toBeDisabled();
+  expect(screen.getByTestId('btn-comprar')).toBeDisabled();
+});
