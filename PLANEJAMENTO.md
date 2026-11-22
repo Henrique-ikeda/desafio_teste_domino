@@ -182,7 +182,7 @@ Cada integrante é **dono de arquivos de teste diferentes** (coluna "Arquivos").
 | **F1** CI no GitHub Actions + README (conferir e completar) | `felipe/f1-ci-readme` | .github/workflows, README.md | — |
 | **F2** Comprar do monte | `felipe/f2-comprar` | tests/compra.spec.js | 13, 14, 23 |
 | **F3** Passar a vez | `felipe/f3-passar` | tests/compra.spec.js | 15, 16, 24 |
-| **F4** Bater e jogo trancado | `felipe/f4-fim` | tests/fim-de-jogo.spec.js | 17, 18, 19, 20 |
+| **F4** Bater e jogo trancado | `felipe/f4-fim` | tests/fim-de-jogo.spec.js | 17, 18, 19, 20, 25, 26, 30 |
 | **F5** Fim bloqueia e nova partida | `felipe/f5-nova-partida` | tests/fim-de-jogo.spec.js | 21, 22 |
 
 ### IDs para casos de teste adicionais
@@ -230,6 +230,9 @@ Para os dois não criarem o mesmo ID: **TC-DM-25 a TC-DM-30** ficam reservados p
 | TC-DM-22 | Nova partida | `MAOS_PADRAO`. J1 joga 6-6; J2 joga 1-6 na direita; clicar `btn-nova-partida` | `mesa` sem peças; `qtd-j1` = 7, `qtd-j2` = 7, `qtd-monte` = 14; `vez` = "Jogador 1"; `mao-j1` com as peças de `J1_PADRAO`; `mensagem` vazia |
 | TC-DM-23 | Compra vai para a mão certa e fica visível | `?j1=6-6,1-1&j2=0-0,1-2&monte=0-1,2-6,3-4`. J1 joga 6-6; J2 compra uma vez | `peca-0-1` dentro de `mao-j2`, com o texto "0-1" (mão visível, é a vez dele); `qtd-j2` = 3; `peca-0-1` não está em `mao-j1` |
 | TC-DM-24 | Monte acaba durante a compra | `?j1=6-6,3-6&j2=0-0&monte=1-2`. J1 joga 6-6; J2 compra uma vez | `qtd-monte` = 0; `btn-comprar` desabilitado; `btn-passar` habilitado; o jogo **não** trancou (o J1 ainda pode jogar 3-6): `mensagem` vazia |
+| TC-DM-25 | Trancado com vitória do Jogador 2 | `?j1=6-6,4-5&j2=0-1&monte=`. J1 joga 6-6 | `mensagem` = "Jogo trancado! Jogador 2 venceu"; `pontos-j1` = 9; `pontos-j2` = 1 |
+| TC-DM-26 | Trancado depois de um passe | `?j1=6-6,3-6,1-2&j2=0-0&monte=`. J1 joga 6-6; J2 clica `btn-passar` (o J1 ainda tem 3-6, não tranca); J1 joga 3-6 na direita | Depois do passe: `mensagem` vazia, `vez` = "Jogador 1". Depois do 3-6: `mesa` = "6-6 6-3"; nenhum dos dois encaixa (J1: 1-2; J2: 0-0; pontas 6 e 3) → `mensagem` = "Jogo trancado! Jogador 2 venceu"; `pontos-j1` = 3; `pontos-j2` = 0 |
+| TC-DM-30 | Trancado logo depois de uma compra | `?j1=6-6,0-1&j2=2-3&monte=4-5`. J1 joga 6-6; J2 compra uma vez (4-5 não encaixa e o monte acaba; o J1 também não tem 6) | `qtd-monte` = 0; `qtd-j2` = 2; `mensagem` = "Jogo trancado! Jogador 1 venceu" sem o J2 precisar passar; `pontos-j1` = 1; `pontos-j2` = 14 |
 
 ## 6. Fluxo de trabalho no Git
 
