@@ -348,3 +348,41 @@ test('TC-DM-27 nada funciona depois de trancar', async () => {
   expect(screen.getByTestId('btn-comprar')).toBeDisabled();
   expect(screen.getByTestId('btn-passar')).toBeDisabled();
 });
+
+// O cenário é o do TC-DM-18 (J2_BATE): o J2 bate e a partida acaba. Ao clicar em "nova partida", o jogo volta às mãos da URL (J2_BATE), e o jogo reabre.
+test('TC-DM-28 nova partida depois do fim reabre o jogo', async () => {
+  // J2_BATE: o J1 tem 6-6 e 0-0, o J2 tem só 1-6, o monte está vazio. Abertura: o J1 clica no 6-6.
+  const user = await abrirJogo(J2_BATE);
+  await jogar(user, '6-6');
+
+  // O J2 joga 1-6 na ponta direita: encaixa e bate. O jogo acaba aqui.
+  await jogar(user, '1-6', 'direita');
+
+  // Depois da batida (prova de que o jogo acabou): a mensagem é a de vitória do J2, exata.
+  expect(screen.getByTestId('mensagem')).toHaveTextContent(/^Jogador 2 venceu!$/);
+  expect(screen.getByTestId('qtd-j2')).toHaveTextContent(/^0$/);
+
+  // Clica em "nova partida": o jogo volta às mãos iniciais de J2_BATE.
+  await user.click(screen.getByTestId('btn-nova-partida'));
+
+  // Antes do 6-6: mesa sem peças, contagens da distribuição inicial, é a vez do J1 e a mensagem está vazia.
+  expect(pecasEm('mesa')).toHaveLength(0);
+  expect(screen.getByTestId('qtd-j1')).toHaveTextContent(/^2$/);
+  expect(screen.getByTestId('qtd-j2')).toHaveTextContent(/^1$/);
+  expect(screen.getByTestId('qtd-monte')).toHaveTextContent(/^0$/);
+  expect(screen.getByTestId('vez')).toHaveTextContent(/^Jogador 1$/);
+  expect(screen.getByTestId('mensagem').textContent.trim()).toBe('');
+
+  // As mãos voltaram: o J1 tem o 6-6 e o 0-0 de novo, e o J2 tem o 1-6 de novo, virado (oculto).
+  expect(within(screen.getByTestId('mao-j1')).getByTestId('peca-6-6')).toHaveTextContent(/^6-6$/);
+  expect(within(screen.getByTestId('mao-j1')).getByTestId('peca-0-0')).toHaveTextContent(/^0-0$/);
+  expect(within(screen.getByTestId('mao-j2')).getByTestId('peca-1-6')).toHaveAttribute('data-oculta', 'true');
+
+  // O J1 joga o 6-6 de novo: a partida reabriu e a mesa recebe a carroça.
+  await jogar(user, '6-6');
+
+  // Depois do 6-6: a mesa tem só o 6-6, é a vez do J2 e o J1 ficou com 1 peça (o 0-0).
+  expect(mesaComoTexto()).toBe('6-6');
+  expect(screen.getByTestId('vez')).toHaveTextContent(/^Jogador 2$/);
+  expect(screen.getByTestId('qtd-j1')).toHaveTextContent(/^1$/);
+});
