@@ -81,3 +81,30 @@ test('TC-DM-19 jogo trancado', async () => {
   expect(screen.getByTestId('qtd-j1')).toHaveTextContent(/^1$/);
   expect(screen.getByTestId('qtd-j2')).toHaveTextContent(/^2$/);
 });
+
+// O J1 abre com 6-6. Depois ninguém tem 6 (J1: 1-4; J2: 2-3) e o monte está vazio: tranca.
+// Pontos: J1 = 1+4 = 5; J2 = 2+3 = 5. Pontos iguais: empate.
+const TRANCA_EMPATE = { j1: '6-6,1-4', j2: '2-3', monte: '' };
+
+test('TC-DM-20 jogo trancado empatado', async () => {
+  // TRANCA_EMPATE: o J1 tem 6-6 e 1-4, o J2 tem 2-3, o monte está vazio. Abertura: basta clicar no 6-6.
+  const user = await abrirJogo(TRANCA_EMPATE);
+  await jogar(user, '6-6');
+
+  // Trancado com pontos iguais: a mensagem é a de empate, exata.
+  expect(screen.getByTestId('mensagem')).toHaveTextContent(/^Jogo trancado! Empate$/);
+
+  // Pontos: o J1 soma 5 (1 + 4) e o J2 soma 5 (2 + 3). Empate.
+  expect(screen.getByTestId('pontos-j1')).toHaveTextContent(/^5$/);
+  expect(screen.getByTestId('pontos-j2')).toHaveTextContent(/^5$/);
+
+  // Monte segue vazio: ninguém comprou.
+  expect(screen.getByTestId('qtd-monte')).toHaveTextContent(/^0$/);
+
+  // A mesa tem só a carroça 6-6.
+  expect(mesaComoTexto()).toBe('6-6');
+
+  // J1 ficou com a peça 1-4, e J2 segue com a peça 2-3.
+  expect(screen.getByTestId('qtd-j1')).toHaveTextContent(/^1$/);
+  expect(screen.getByTestId('qtd-j2')).toHaveTextContent(/^1$/);
+});
